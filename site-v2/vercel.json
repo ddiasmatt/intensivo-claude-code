@@ -18,6 +18,8 @@
     }
   ],
   "rewrites": [
+    { "source": "/lpv2", "destination": "/" },
+    { "source": "/lpv2/", "destination": "/" },
     { "source": "/lpv2/:path*", "destination": "/:path*" }
   ]
 }
