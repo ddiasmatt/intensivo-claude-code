@@ -18,6 +18,8 @@
     }
   ],
   "rewrites": [
+    { "source": "/lpv2", "destination": "https://intensivo-claude-code-v2.vercel.app/lpv2" },
+    { "source": "/lpv2/", "destination": "https://intensivo-claude-code-v2.vercel.app/lpv2/" },
     { "source": "/lpv2/:path*", "destination": "https://intensivo-claude-code-v2.vercel.app/lpv2/:path*" }
   ]
 }
