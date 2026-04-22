@@ -1,0 +1,33 @@
+---
+import { CONFIG } from '../../config';
+---
+<section class="relative border-t border-rule py-24 sm:py-36 bg-page">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <p class="font-mono text-xs tracking-widest text-accent uppercase mb-6">
+      {CONFIG.TIMELINE_KICKER}
+    </p>
+    <h2 class="font-display text-[clamp(2rem,5vw,3.5rem)] leading-tight text-ink-primary mb-6">
+      {CONFIG.TIMELINE_HEADLINE}
+    </h2>
+    <p class="font-sans text-ink-secondary text-lg mb-16 max-w-2xl">
+      {CONFIG.TIMELINE_SUBHEADLINE}
+    </p>
+
+    <ol class="relative flex flex-col md:flex-row md:items-start md:before:content-[''] md:before:absolute md:before:top-4 md:before:left-0 md:before:right-0 md:before:h-px md:before:bg-rule">
+      {CONFIG.TIMELINE_BLOCKS.map((t) => (
+        <li class="relative md:flex-1 md:px-6 py-8 md:py-0 border-b md:border-b-0 md:border-r last:border-r-0 border-rule">
+          <span class="hidden md:block w-2 h-2 rounded-full bg-accent mb-6 -translate-y-[5px]"></span>
+          <span class="font-mono text-xs tracking-wider text-accent block mb-3">{t.time}</span>
+          <h3 class="font-display text-xl text-ink-primary mb-2">{t.title}</h3>
+          <p class="font-sans text-sm text-ink-secondary leading-relaxed">{t.description}</p>
+        </li>
+      ))}
+    </ol>
+
+    <p class="mt-12 font-mono text-xs tracking-widest text-ink-muted uppercase">
+      {CONFIG.TIMELINE_FOOTER}
+    </p>
+
+  </div>
+</section>

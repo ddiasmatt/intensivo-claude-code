@@ -1,15 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "cd site && npm run build",
-  "outputDirectory": "site/dist",
-  "installCommand": "cd site && npm install",
-  "framework": null,
-  "redirects": [
-    { "source": "/", "destination": "/lpv2/" }
-  ],
-  "rewrites": [
-    { "source": "/lpv2/:path*", "destination": "/:path*" }
-  ],
+  "framework": "astro",
   "headers": [
     {
       "source": "/(.*)",

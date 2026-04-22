@@ -1,0 +1,181 @@
+---
+import { CONFIG } from '../../config';
+import HeroMissionControl from '../hero/HeroMissionControl.astro';
+
+const gridVerticals = [80, 160, 240, 320, 400, 480, 560, 640, 720, 800, 880, 960, 1040, 1120];
+const gridHorizontals = [80, 160, 240, 320, 400, 480, 560, 640];
+---
+<section class="relative bg-page pt-16 pb-20 sm:pt-24 sm:pb-28 overflow-hidden">
+
+  <!-- 1. Bloco textual + grid decorativo -->
+  <div class="hero-text-block relative">
+
+    <!-- Grid decorativo (apenas sm+) -->
+    <div
+      class="hero-grid hidden sm:block absolute inset-0 pointer-events-none"
+      aria-hidden="true"
+    >
+      <svg
+        class="hero-grid-svg"
+        viewBox="0 0 1200 720"
+        preserveAspectRatio="xMidYMid slice"
+        role="presentation"
+        aria-hidden="true"
+      >
+        {gridVerticals.map((x) => (
+          <line class="hero-grid-line hero-grid-line-v" x1={x} y1="0" x2={x} y2="720" />
+        ))}
+        {gridHorizontals.map((y) => (
+          <line class="hero-grid-line hero-grid-line-h" x1="0" y1={y} x2="1200" y2={y} />
+        ))}
+        <circle class="hero-grid-dot" cx="960" cy="160" r="3" />
+      </svg>
+    </div>
+
+    <!-- Conteudo textual acima do grid -->
+    <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+
+      <p class="hero-kicker font-mono text-xs tracking-widest text-accent uppercase mb-8">
+        {CONFIG.HERO_KICKER}
+      </p>
+
+      <h1 class="font-display leading-[1.02] text-[clamp(2.75rem,9vw,6.5rem)]">
+        <span class="hero-line block" data-line="1">{CONFIG.HERO_H1_LINES[0].text}</span>
+        <span class="hero-line block font-bold" data-line="2">
+          <span class="text-accent">Claude</span> Code
+        </span>
+      </h1>
+
+      <p class="hero-sub mt-8 mx-auto max-w-2xl font-sans text-ink-secondary text-lg sm:text-xl leading-relaxed">
+        {CONFIG.HERO_SUBHEADLINE}
+      </p>
+
+      <p class="hero-icp mt-3 mx-auto max-w-2xl font-sans text-ink-muted text-base">
+        {CONFIG.HERO_ICP}
+      </p>
+
+      <p class="hero-offer mt-10 font-mono text-sm tracking-wide text-accent uppercase">
+        {CONFIG.HERO_OFFER}
+      </p>
+
+      <div class="mt-6 flex justify-center">
+        <button
+          type="button"
+          data-open-modal
+          data-cta-location="hero"
+          class="hero-cta inline-flex items-center gap-3 bg-accent hover:bg-accent-hover text-page font-mono text-sm tracking-widest uppercase px-8 py-4 transition-colors"
+        >
+          {CONFIG.HERO_CTA}
+        </button>
+      </div>
+
+      <p class="hero-microcopy mt-4 font-mono text-xs text-ink-muted tracking-wide">
+        {CONFIG.HERO_MICROCOPY}
+      </p>
+
+      <ul class="hero-bullets mt-8 flex flex-col sm:flex-row sm:justify-center gap-3 sm:gap-6 font-sans text-sm text-ink-secondary">
+        {CONFIG.HERO_BULLETS.map((b) => (
+          <li class="flex items-center justify-center gap-2 before:content-['-'] before:text-accent before:font-bold">{b}</li>
+        ))}
+      </ul>
+    </div>
+  </div>
+
+  <!-- 2. HeroMissionControl em container proprio, fora do grid -->
+  <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+    <HeroMissionControl />
+  </div>
+
+</section>
+
+<script>
+  import gsap from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+  ScrollTrigger.config({ ignoreMobileResize: true });
+
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  document.fonts.ready.then(() => {
+    // 1. Grid path drawing
+    const gridLines = Array.from(
+      document.querySelectorAll<SVGLineElement>('.hero-grid-line')
+    );
+    const gridDot = document.querySelector<SVGCircleElement>('.hero-grid-dot');
+
+    if (prefersReducedMotion) {
+      // estado final estatico
+      gridLines.forEach((line) => {
+        line.style.strokeDasharray = '';
+        line.style.strokeDashoffset = '';
+      });
+      if (gridDot) gridDot.classList.add('is-visible');
+    } else if (gridLines.length > 0) {
+      // seed dashoffset = comprimento em cada linha
+      gridLines.forEach((line) => {
+        const len = line.getTotalLength();
+        line.style.strokeDasharray = `${len}`;
+        line.style.strokeDashoffset = `${len}`;
+      });
+
+      const verticals = gridLines.filter((l) => l.classList.contains('hero-grid-line-v'));
+      const horizontals = gridLines.filter((l) => l.classList.contains('hero-grid-line-h'));
+
+      const gridTl = gsap.timeline();
+
+      gridTl
+        .to(verticals, {
+          strokeDashoffset: 0,
+          duration: 0.6,
+          stagger: 0.03,
+          ease: 'power2.out',
+        }, 0)
+        .to(horizontals, {
+          strokeDashoffset: 0,
+          duration: 0.6,
+          stagger: 0.03,
+          ease: 'power2.out',
+        }, 0);
+
+      if (gridDot) {
+        gridTl.call(() => {
+          gridDot.classList.add('is-visible');
+          gridDot.classList.add('is-pulsing');
+        }, [], 0.9);
+      }
+    }
+
+    // 2. Timeline existente da Hero (inalterada)
+    const tl = gsap.timeline();
+
+    tl.from('.hero-kicker', {
+      opacity: 0,
+      y: -8,
+      duration: 0.4,
+      ease: 'power2.out',
+    })
+      .from(
+        '.hero-line',
+        {
+          clipPath: 'inset(0 50% 0 50%)',
+          stagger: 0.15,
+          duration: 0.9,
+          ease: 'expo.out',
+        },
+        0.2
+      )
+      .from('.hero-sub', { opacity: 0, y: 10, duration: 0.5 }, 1.0)
+      .from('.hero-icp', { opacity: 0, duration: 0.4 }, 1.2)
+      .from('.hero-offer', { opacity: 0, duration: 0.4 }, 1.4)
+      .from('.hero-cta', { opacity: 0, y: 10, duration: 0.4 }, 1.6)
+      .from(
+        '.hero-microcopy, .hero-bullets li',
+        { opacity: 0, duration: 0.3, stagger: 0.08 },
+        1.8
+      )
+      .from('.hero-mission-control', { opacity: 0, y: 16, duration: 0.5, ease: 'power2.out' }, 2.1);
+
+    ScrollTrigger.refresh();
+  });
+</script>

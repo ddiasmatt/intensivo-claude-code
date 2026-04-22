@@ -1,0 +1,145 @@
+---
+import { CONFIG } from '../../config';
+---
+<section id="para-quem-e" class="relative border-t border-rule py-24 sm:py-36 bg-surface">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <p class="font-mono text-xs tracking-widest text-accent uppercase mb-6">
+      {CONFIG.PARAQUEM_KICKER}
+    </p>
+    <h2 class="font-display text-[clamp(2rem,5vw,3.5rem)] leading-tight text-ink-primary mb-4">
+      {CONFIG.PARAQUEM_HEADLINE}
+    </h2>
+    {CONFIG.PARAQUEM_SUB && (
+      <p class="font-mono text-xs tracking-widest text-ink-muted uppercase mb-12">
+        {CONFIG.PARAQUEM_SUB}
+      </p>
+    )}
+
+    <div class="paraquem-list" role="group" aria-label="Autoteste de perfil">
+      {CONFIG.PARAQUEM.map((perfil, i) => (
+        <button
+          type="button"
+          class:list={[
+            'paraquem-item w-full grid grid-cols-[auto_1fr] gap-5 sm:gap-6 items-start text-left',
+            'py-6 sm:py-7',
+            i < CONFIG.PARAQUEM.length - 1 ? 'border-b border-rule' : '',
+            'focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4',
+            'transition-colors duration-200 hover:bg-page/40',
+          ]}
+          aria-pressed="false"
+          data-paraquem-check
+        >
+          <span class="paraquem-check relative w-6 h-6 sm:w-7 sm:h-7 border border-rule bg-elevated flex items-center justify-center transition-colors duration-200 mt-1" aria-hidden="true">
+            <svg class="paraquem-check-icon opacity-0 transition-opacity duration-150 w-4 h-4 text-page" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </span>
+          <div>
+            <h3 class="font-display text-2xl sm:text-[1.75rem] leading-snug text-ink-primary">
+              {perfil.title}
+            </h3>
+            <p class="font-sans text-base text-ink-secondary leading-relaxed mt-2 sm:mt-3 max-w-prose">
+              {perfil.description}
+            </p>
+          </div>
+        </button>
+      ))}
+    </div>
+
+    <aside class="paraquem-footnote mt-12 pt-8 border-t border-rule">
+      <div class="bg-elevated border border-rule p-6 sm:p-8">
+        <p class="flex items-center gap-3 font-mono text-xs tracking-widest text-accent uppercase mb-4">
+          <span>P.S.</span>
+          <span class="inline-block h-3 w-px bg-accent"></span>
+          <span>{CONFIG.PARAQUEM_FOOTNOTE.label}</span>
+        </p>
+        <p class="font-sans text-base sm:text-lg text-ink-secondary leading-relaxed">
+          {CONFIG.PARAQUEM_FOOTNOTE.body}
+        </p>
+      </div>
+    </aside>
+
+    <div class="paraquem-cta hidden mt-8 p-6 sm:p-8 bg-elevated border border-accent/40" aria-hidden="true">
+      <p class="font-display text-xl text-ink-primary leading-snug mb-6">
+        <span class="text-accent">&rarr;</span> {CONFIG.PARAQUEM_CTA_TEXT}
+      </p>
+      <button
+        type="button"
+        data-open-modal
+        class="inline-block bg-ink-primary text-page font-mono text-xs tracking-widest uppercase px-6 py-4 hover:bg-accent transition-colors duration-200"
+      >
+        {CONFIG.PARAQUEM_CTA_BUTTON}
+      </button>
+    </div>
+
+  </div>
+</section>
+
+<script>
+  import gsap from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Entrance
+  document.fonts.ready.then(() => {
+    const items = document.querySelectorAll('.paraquem-item, .paraquem-footnote');
+    if (prefersReducedMotion || items.length === 0) return;
+
+    gsap.set(items, { opacity: 0, y: 16 });
+    gsap.to(items, {
+      opacity: 1,
+      y: 0,
+      duration: 0.4,
+      stagger: 0.06,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: '#para-quem-e',
+        start: 'top 75%',
+        toggleActions: 'play none none none',
+      },
+      onComplete: () => gsap.set(items, { clearProps: 'opacity,y' }),
+    });
+    ScrollTrigger.refresh();
+  });
+
+  // Toggle + CTA reveal
+  const buttons = document.querySelectorAll<HTMLButtonElement>('[data-paraquem-check]');
+  const cta = document.querySelector<HTMLElement>('.paraquem-cta');
+  let ctaRevealed = false;
+
+  function toggle(btn: HTMLButtonElement) {
+    const isPressed = btn.getAttribute('aria-pressed') === 'true';
+    const next = !isPressed;
+    btn.setAttribute('aria-pressed', String(next));
+    const check = btn.querySelector<HTMLElement>('.paraquem-check');
+    const icon = btn.querySelector<HTMLElement>('.paraquem-check-icon');
+    if (check && icon) {
+      if (next) {
+        check.classList.remove('border-rule', 'bg-elevated');
+        check.classList.add('border-accent', 'bg-accent');
+        icon.style.opacity = '1';
+      } else {
+        check.classList.add('border-rule', 'bg-elevated');
+        check.classList.remove('border-accent', 'bg-accent');
+        icon.style.opacity = '0';
+      }
+    }
+    if (next && !ctaRevealed && cta) {
+      ctaRevealed = true;
+      cta.classList.remove('hidden');
+      cta.removeAttribute('aria-hidden');
+      if (!prefersReducedMotion) {
+        gsap.fromTo(cta,
+          { clipPath: 'inset(100% 0 0 0)', opacity: 0 },
+          { clipPath: 'inset(0 0 0 0)', opacity: 1, duration: 0.32, ease: 'power3.out' }
+        );
+      }
+    }
+  }
+
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => toggle(btn));
+  });
+</script>

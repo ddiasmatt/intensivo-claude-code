@@ -1,0 +1,34 @@
+{
+  "name": "intensivo-claude-code-landing",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "convert:webp": "node scripts/convert-depoimentos.mjs"
+  },
+  "dependencies": {
+    "@astrojs/react": "^3",
+    "@gsap/react": "^2",
+    "@tailwindcss/vite": "^4",
+    "astro": "^4",
+    "clsx": "^2",
+    "gsap": "^3",
+    "lucide-react": "^0.263",
+    "motion": "^12",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-international-phone": "^3",
+    "tailwind-merge": "^2",
+    "tailwindcss": "^4"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.8",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "sharp": "^0.33.5",
+    "typescript": "^5.9.3"
+  }
+}

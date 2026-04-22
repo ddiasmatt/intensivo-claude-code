@@ -1,0 +1,96 @@
+---
+// site/src/layouts/Base.astro
+import '../styles/global.css';
+import { CONFIG } from '../config';
+import { buildStructuredData } from '../lib/structured-data';
+import CaptureModal from '../components/react/CaptureModal';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'Intensivo Claude Code · 16/05 ao vivo no Zoom',
+  description = 'Sabado intensivo com Mateus Dias. Construa 10 agentes de IA sem programar. Grupo VIP com oferta unica R$ 27.',
+} = Astro.props;
+
+const GA_ID = import.meta.env.PUBLIC_GA_ID ?? '';
+const META_PIXEL = import.meta.env.PUBLIC_META_PIXEL_ID ?? '';
+const canonical = 'https://icc.thesociety.com.br/lpv2/';
+
+const jsonLd = buildStructuredData({
+  canonical,
+  eventStart: CONFIG.EVENT_START_ISO,
+  eventEnd: CONFIG.EVENT_END_ISO,
+  redirectUrl: CONFIG.REDIRECT_URL,
+});
+---
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="keywords" content="claude code, intensivo, mateus dias, agentes de ia, grupo vuk, ai builder, no-code, saas brasileiro" />
+    <meta name="author" content="Grupo VUK" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href={canonical} />
+    <meta name="theme-color" content="#FBFAF7" />
+    <link rel="manifest" href={`${import.meta.env.BASE_URL}manifest.webmanifest`} />
+    <link rel="icon" href={`${import.meta.env.BASE_URL}favicon.ico`} sizes="any" />
+    <link rel="icon" type="image/png" href={`${import.meta.env.BASE_URL}favicon.png`} />
+    <link rel="apple-touch-icon" href={`${import.meta.env.BASE_URL}apple-touch-icon.png`} />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content={`${canonical}og-image.png`} />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500..700;1,9..144,500&family=Inter+Tight:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap" />
+
+    <!-- GA4 condicional -->
+    {GA_ID && (
+      <>
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
+        <script is:inline define:vars={{ GA_ID }}>
+          window.dataLayer = window.dataLayer || [];
+          function gtag() { window.dataLayer.push(arguments); }
+          window.gtag = gtag;
+          gtag('js', new Date());
+          gtag('config', GA_ID);
+        </script>
+      </>
+    )}
+
+    <!-- Meta Pixel condicional (v1: vazio, script nao injeta) -->
+    {META_PIXEL && (
+      <script is:inline define:vars={{ META_PIXEL }}>
+        /* snippet oficial Meta Pixel; ver analytics-pattern.md secao 2 */
+      </script>
+    )}
+
+    <!-- JSON-LD: Organization + WebSite + Event -->
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  </head>
+  <body class="bg-page text-ink-primary font-sans antialiased">
+    <slot />
+
+    <!-- Modal de captura (React island). client:load porque o modal pode ser acionado
+         por CTA no hero antes de qualquer scroll. Nao pode usar client:visible. -->
+    <CaptureModal client:load />
+
+    <!-- Delegador global de cliques em [data-open-modal]. Astro processa o import. -->
+    <script>
+      import '../scripts/modal-trigger.ts';
+    </script>
+  </body>
+</html>
