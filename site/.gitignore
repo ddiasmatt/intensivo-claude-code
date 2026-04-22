@@ -1,4 +1,26 @@
-node_modules
-dist
-.astro
+# Build
+dist/
+.astro/
+
+# Deps
+node_modules/
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Env
 .env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+
+# Editors
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*

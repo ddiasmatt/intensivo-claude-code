@@ -1,42 +1,27 @@
 ---
-import { CONFIG } from '../../config';
+import { CONFIG } from '@/config';
+import FAQList from '@/components/react/FAQList';
 ---
-<section class="relative border-t border-rule py-24 sm:py-36 bg-page" id="faq">
-  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
 
-    <p class="font-mono text-xs tracking-widest text-accent uppercase mb-6">
-      {CONFIG.FAQ_KICKER}
-    </p>
+<section id="faq" class="relative py-20 md:py-28" data-gsap="reveal">
+  <div class="container-landing max-w-4xl">
+    <div class="mb-10 text-center md:mb-14">
+      <span
+        class="glass-chip mx-auto font-mono text-[10px] uppercase tracking-[0.22em] text-accent-hover"
+      >
+        <span class="h-1 w-1 rounded-full bg-accent"></span>
+        {CONFIG.FAQ_TAG}
+      </span>
+      <h2
+        class="mx-auto mt-5 text-3xl font-bold tracking-tight text-ink-primary md:text-4xl lg:text-5xl"
+      >
+        {CONFIG.FAQ_TITLE}
+      </h2>
+      <p class="mx-auto mt-4 max-w-2xl text-base text-ink-secondary md:text-lg">
+        {CONFIG.FAQ_SUBTITLE}
+      </p>
+    </div>
 
-    <h2 class="font-display text-[clamp(2rem,5vw,3.5rem)] leading-tight text-ink-primary mb-16">
-      {CONFIG.FAQ_HEADLINE}
-    </h2>
-
-    <ul class="divide-y divide-rule border-t border-b border-rule" id="faq-list">
-      {CONFIG.FAQ_ITEMS.map((item) => (
-        <li>
-          <details class="group">
-            <summary class="flex justify-between items-center py-6 cursor-pointer font-display text-xl text-ink-primary list-none">
-              {item.question}
-              <span class="ml-4 shrink-0 text-accent font-mono text-2xl transition-transform group-open:rotate-45">+</span>
-            </summary>
-            <p class="pb-6 font-sans text-ink-secondary leading-relaxed">{item.answer}</p>
-          </details>
-        </li>
-      ))}
-    </ul>
-
+    <FAQList client:visible items={CONFIG.FAQ_ITEMS} />
   </div>
 </section>
-
-<script>
-  // 1 aberto por vez — fecha outros <details> ao abrir um novo
-  const list = document.getElementById('faq-list');
-  list?.addEventListener('toggle', (e) => {
-    const target = e.target as HTMLDetailsElement;
-    if (!target.open) return;
-    list.querySelectorAll('details[open]').forEach((d) => {
-      if (d !== target) (d as HTMLDetailsElement).open = false;
-    });
-  }, true);
-</script>

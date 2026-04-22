@@ -1,391 +1,292 @@
-// site/src/components/react/CaptureModal.tsx
-// Modal de captura (ilha React, client:load). Unico ponto de conversao.
-// Contrato em ~/.claude/skills/landing-page-prd/references/modal-pattern.md.
-// Abertura via CustomEvent('open-capture-modal') disparado por modal-trigger.ts.
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { AlertCircle, CheckCircle, Loader2, X } from 'lucide-react';
+import { CONFIG } from '@/config';
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { X, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { PhoneInput } from 'react-international-phone';
-import 'react-international-phone/style.css';
-import { CONFIG } from '../../config';
-import { captureUTMs, getStoredUTMs, buildUrlWithUTMs } from '../../lib/utm';
+type SubmitStatus = 'idle' | 'loading' | 'success' | 'error';
 
-type Status = 'idle' | 'loading' | 'success' | 'error';
+const UTM_PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'] as const;
 
-// Regex email suficiente para validacao client-side. Validacao final no backend.
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function maskPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, '').slice(0, 11);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
+function buildUrlWithUTMs(baseUrl: string, utmParams: Record<string, string>): string {
+  try {
+    const url = new URL(baseUrl);
+    Object.entries(utmParams).forEach(([key, value]) => {
+      if (value) url.searchParams.set(key, value);
+    });
+    return url.toString();
+  } catch {
+    return baseUrl;
+  }
+}
+
+function trackLead() {
+  const eventID = `lead_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  if (typeof window === 'undefined') return;
+  try {
+    window.fbq?.('track', 'Lead', {}, { eventID });
+  } catch {
+    /* no-op */
+  }
+  try {
+    window.gtag?.('event', 'generate_lead', { event_id: eventID });
+  } catch {
+    /* no-op */
+  }
+}
 
 export default function CaptureModal() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [honeypot, setHoneypot] = useState('');
-  const [status, setStatus] = useState<Status>('idle');
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const cardRef = useRef<HTMLDivElement>(null);
+  const [status, setStatus] = useState<SubmitStatus>('idle');
+  const [errors, setErrors] = useState<{ name?: string; email?: string; phone?: string }>({});
+  const [utmParams, setUtmParams] = useState<Record<string, string>>({});
   const firstInputRef = useRef<HTMLInputElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
-  // Captura UTMs da URL na primeira montagem da pagina. Persiste em sessionStorage.
   useEffect(() => {
-    captureUTMs();
+    const params = new URLSearchParams(window.location.search);
+    const captured: Record<string, string> = {};
+    UTM_PARAMS.forEach((k) => {
+      const v = params.get(k);
+      if (v) captured[k] = v;
+    });
+    setUtmParams(captured);
   }, []);
 
-  // Escuta o evento global disparado pelos CTAs.
   useEffect(() => {
-    const onOpen = () => setOpen(true);
-    window.addEventListener('open-capture-modal', onOpen);
-    return () => window.removeEventListener('open-capture-modal', onOpen);
+    const handler = () => setOpen(true);
+    window.addEventListener('open-capture-modal', handler);
+    return () => window.removeEventListener('open-capture-modal', handler);
   }, []);
 
-  // requestClose: guarda conta o formulario sujo antes de fechar. Usado por
-  // Esc, clique no X e clique no backdrop.
-  const requestClose = useCallback(() => {
-    const hasData = name.trim() !== '' || email.trim() !== '' || phone.trim() !== '';
-    if (hasData && status !== 'success') {
-      // eslint-disable-next-line no-alert
-      const ok = window.confirm('Fechar agora? Os dados preenchidos serao perdidos.');
-      if (!ok) return;
+  useEffect(() => {
+    if (open) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      requestAnimationFrame(() => firstInputRef.current?.focus());
+      return () => {
+        document.body.style.overflow = prev;
+      };
     }
-    setOpen(false);
-    setStatus('idle');
-    setErrors({});
-  }, [name, email, phone, status]);
+  }, [open]);
 
-  // Focus trap manual. Confina Tab/Shift+Tab entre focaveis visiveis do card.
-  const trapFocus = useCallback((e: KeyboardEvent) => {
-    if (!cardRef.current) return;
-    const focusables = cardRef.current.querySelectorAll<HTMLElement>(
-      'input, button, [href], [tabindex]:not([tabindex="-1"])'
-    );
-    const visibles = Array.from(focusables).filter(
-      (el) => !el.hasAttribute('disabled') && el.offsetParent !== null
-    );
-    if (visibles.length === 0) return;
-    const first = visibles[0];
-    const last = visibles[visibles.length - 1];
-    const active = document.activeElement as HTMLElement | null;
-    if (e.shiftKey && active === first) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && active === last) {
-      e.preventDefault();
-      first.focus();
-    }
-  }, []);
-
-  // Side-effects enquanto aberto: lock scroll do body, focus inicial, keyboard handlers.
   useEffect(() => {
     if (!open) return;
-
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    // requestAnimationFrame garante que o elemento ja foi montado no DOM
-    // antes do foco ser aplicado (evita perda de focus em animacoes de entrada).
-    const rafId = requestAnimationFrame(() => {
-      firstInputRef.current?.focus();
-    });
-
+    const card = cardRef.current;
+    if (!card) return;
+    const focusableSelector =
+      'input:not([disabled]), button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
         requestClose();
-      } else if (e.key === 'Tab') {
-        trapFocus(e);
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const focusables = Array.from(
+        card.querySelectorAll<HTMLElement>(focusableSelector),
+      ).filter((el) => el.offsetParent !== null);
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      if (e.shiftKey && (active === first || !card.contains(active))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
       }
     };
-    document.addEventListener('keydown', onKey);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
 
-    return () => {
-      cancelAnimationFrame(rafId);
-      document.body.style.overflow = prevOverflow;
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [open, requestClose, trapFocus]);
-
-  function validate(): boolean {
-    const e: Record<string, string> = {};
-    if (!name.trim()) e.name = 'Preencha seu nome.';
-    if (!EMAIL_RE.test(email.trim())) e.email = 'Email invalido.';
-    const phoneDigits = phone.replace(/\D/g, '');
-    if (phoneDigits.length < 8 || phoneDigits.length > 15) {
-      e.phone = 'Telefone invalido. Inclua codigo do pais.';
-    }
-    setErrors(e);
-    return Object.keys(e).length === 0;
+  function close() {
+    setOpen(false);
+    setStatus('idle');
+    setErrors({});
   }
 
-  async function handleSubmit(ev: FormEvent<HTMLFormElement>) {
-    ev.preventDefault();
-    if (status === 'loading') return; // Guard extra contra double-submit.
+  function requestClose() {
+    const hasData = name.trim() || email.trim() || phone.trim();
+    if (hasData && status !== 'success') {
+      const ok = window.confirm(
+        'Fechar agora? Os dados preenchidos serao perdidos.',
+      );
+      if (!ok) return;
+    }
+    close();
+  }
+
+  function validate(): boolean {
+    const newErrors: typeof errors = {};
+    if (!name.trim() || name.trim().length < 2) newErrors.name = 'Nome deve ter pelo menos 2 caracteres';
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim() || !emailRegex.test(email.trim())) newErrors.email = 'E-mail invalido';
+    const rawPhone = phone.replace(/\D/g, '');
+    if (rawPhone.length !== 11) newErrors.phone = 'Telefone deve ter 11 digitos';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
     if (!validate()) return;
     setStatus('loading');
-
-    // Honeypot: bots preenchem, humanos nao.
-    // Fingir sucesso sem disparar tracking/webhook — nao alertar o bot.
-    if (honeypot.trim().length > 0) {
-      setStatus('success');
-      return;
-    }
-
-    // eventID gerado UMA vez. Propagado em Pixel, GA4 e payload para dedup CAPI.
-    const eventID = `lead_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-    const utms = getStoredUTMs();
 
     const payload = {
       name: name.trim(),
       email: email.trim(),
-      phone: phone, // ja vem em E.164 do PhoneInput (ex: +5511999999999)
-      event_id: eventID,
-      ...utms,
+      phone: phone.replace(/\D/g, ''),
+      utm_source: utmParams.utm_source || '',
+      utm_medium: utmParams.utm_medium || '',
+      utm_campaign: utmParams.utm_campaign || '',
+      utm_content: utmParams.utm_content || '',
+      utm_term: utmParams.utm_term || '',
     };
 
-    // Fire-and-forget. Redirect nao aguarda response dos webhooks.
-    if (CONFIG.WEBHOOK_URLS.length > 0) {
-      CONFIG.WEBHOOK_URLS.forEach((url: string) => {
-        fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        }).catch(() => {
-          // Silencioso por design. Falha de webhook nao pode travar o lead.
-        });
-      });
-    }
+    CONFIG.WEBHOOK_URLS.forEach((url) => {
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }).catch(() => {});
+    });
 
-    // Tracking com mesmo eventID (dedup Meta CAPI + GA4 measurement protocol).
-    // @ts-expect-error fbq injetado pelo Pixel em Base.astro (opcional)
-    window.fbq?.('track', 'Lead', {}, { eventID });
-    // @ts-expect-error gtag injetado pelo GA4 em Base.astro
-    window.gtag?.('event', 'generate_lead', { event_id: eventID });
+    trackLead();
 
-    // Redirect com UTMs propagados. Nao aguarda.
     if (CONFIG.REDIRECT_URL) {
-      window.location.href = buildUrlWithUTMs(CONFIG.REDIRECT_URL, utms);
+      window.location.href = buildUrlWithUTMs(CONFIG.REDIRECT_URL, utmParams);
       return;
     }
     setStatus('success');
   }
 
-  return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          key="capture-modal-backdrop"
-          className="fixed inset-0 z-50 flex items-end justify-center bg-ink-primary/60 p-0 sm:items-center sm:p-6"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) requestClose();
-          }}
-        >
-          <motion.div
-            ref={cardRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="capture-modal-title"
-            aria-describedby="capture-modal-subtitle"
-            className="relative w-full border border-rule bg-elevated p-8 sm:max-w-md sm:p-10"
-            initial={{ y: 40, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 20, opacity: 0 }}
-            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <button
-              type="button"
-              onClick={requestClose}
-              aria-label="Fechar"
-              className="absolute right-4 top-4 text-ink-muted transition-colors hover:text-ink-primary"
-            >
-              <X size={20} strokeWidth={1.5} />
-            </button>
+  if (!open) return null;
 
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="capture-modal-title"
+      className="fixed inset-0 z-[60] flex items-end justify-center px-3 py-6 sm:items-center sm:p-6"
+    >
+      <div
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        onClick={requestClose}
+        aria-hidden="true"
+      />
+      <div
+        ref={cardRef}
+        className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-elevated shadow-[0_40px_120px_-30px_rgba(0,0,0,0.7)]"
+      >
+        <button
+          type="button"
+          onClick={requestClose}
+          className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full text-ink-secondary transition hover:bg-white/10 hover:text-ink-primary"
+          aria-label="Fechar"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        <div className="px-6 py-8 sm:px-8">
+          <div className="mb-6 text-center">
             <h2
               id="capture-modal-title"
-              className="mb-2 font-display text-3xl text-ink-primary"
+              className="text-xl font-bold tracking-tight text-ink-primary sm:text-2xl"
             >
               {CONFIG.MODAL_TITLE}
             </h2>
-            <p
-              id="capture-modal-subtitle"
-              className="mb-6 font-sans text-base text-ink-secondary"
-            >
-              {CONFIG.MODAL_SUBTITLE}
-            </p>
+            <p className="mt-2 text-sm text-ink-secondary sm:text-base">{CONFIG.MODAL_SUBTITLE}</p>
+          </div>
 
-            {status === 'success' ? (
-              <div
-                role="status"
-                aria-live="polite"
-                className="flex flex-col items-center gap-3 py-6 text-center"
-              >
-                <CheckCircle2 size={40} strokeWidth={1.5} className="text-accent" />
-                <p className="font-display text-2xl text-ink-primary">
-                  {CONFIG.MODAL_SUCCESS}
-                </p>
-                <p className="font-mono text-xs uppercase tracking-widest text-ink-muted">
-                  {CONFIG.MODAL_PRIVACY}
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-                <div>
-                  <label
-                    htmlFor="capture-name"
-                    className="mb-1 block font-mono text-xs uppercase tracking-widest text-ink-muted"
-                  >
-                    Nome
-                  </label>
-                  <input
-                    ref={firstInputRef}
-                    id="capture-name"
-                    type="text"
-                    name="name"
-                    autoComplete="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    aria-invalid={!!errors.name}
-                    aria-describedby={errors.name ? 'capture-name-error' : undefined}
-                    className="w-full border border-rule bg-page px-3 py-3 font-sans text-base text-ink-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent"
-                    placeholder="Seu nome"
-                  />
-                  {errors.name && (
-                    <p
-                      id="capture-name-error"
-                      className="mt-1 font-mono text-xs text-accent"
-                    >
-                      {errors.name}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="capture-email"
-                    className="mb-1 block font-mono text-xs uppercase tracking-widest text-ink-muted"
-                  >
-                    Email
-                  </label>
-                  <input
-                    id="capture-email"
-                    type="email"
-                    name="email"
-                    inputMode="email"
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    aria-invalid={!!errors.email}
-                    aria-describedby={errors.email ? 'capture-email-error' : undefined}
-                    className="w-full border border-rule bg-page px-3 py-3 font-sans text-base text-ink-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent"
-                    placeholder="voce@email.com"
-                  />
-                  {errors.email && (
-                    <p
-                      id="capture-email-error"
-                      className="mt-1 font-mono text-xs text-accent"
-                    >
-                      {errors.email}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="capture-phone"
-                    className="mb-1 block font-mono text-xs uppercase tracking-widest text-ink-muted"
-                  >
-                    Telefone (WhatsApp)
-                  </label>
-                  {/*
-                    Divergencia intencional do padrao canonico ~/.claude/skills/landing-page-prd/references/modal-pattern.md
-                    linhas 115-119 (mask BR-only). Publico VUK inclui brasileiros no exterior + leads LATAM futuros.
-                    PhoneInput retorna valor em E.164 (ex: +5511999999999) — shape esperado pelo webhook VUKer.
-                  */}
-                  <PhoneInput
-                    defaultCountry="br"
-                    value={phone}
-                    onChange={(newPhone) => setPhone(newPhone)}
-                    inputProps={{
-                      id: 'capture-phone',
-                      name: 'phone',
-                      autoComplete: 'tel',
-                      'aria-invalid': !!errors.phone,
-                      'aria-describedby': errors.phone ? 'capture-phone-error' : undefined,
-                    }}
-                    inputClassName="w-full border border-rule bg-page px-3 py-3 font-sans text-base text-ink-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent"
-                    countrySelectorStyleProps={{
-                      buttonClassName: 'border border-rule bg-page px-3 py-3',
-                      dropdownStyleProps: {
-                        className: 'border border-rule bg-elevated text-ink-primary font-sans text-sm',
-                      },
-                    }}
-                  />
-                  {errors.phone && (
-                    <p
-                      id="capture-phone-error"
-                      className="mt-1 font-mono text-xs text-accent"
-                    >
-                      {errors.phone}
-                    </p>
-                  )}
-                </div>
-
-                {/*
-                  Honeypot anti-spam. Posicionado off-screen (nao display:none — alguns bots detectam).
-                  Bots automatizados tendem a preencher qualquer campo com `name="website"` ou `name="url"`.
-                  Humanos nao veem. Se preenchido, submit finge sucesso e nao dispara nenhum tracking/webhook.
-                */}
+          {status === 'success' ? (
+            <div className="flex flex-col items-center gap-4 py-6 text-center">
+              <CheckCircle className="h-14 w-14 text-accent" />
+              <p className="text-lg font-semibold text-accent">{CONFIG.MODAL_SUCCESS}</p>
+              {CONFIG.REDIRECT_URL && <p className="text-sm text-ink-muted">Redirecionando...</p>}
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
                 <input
+                  ref={firstInputRef}
                   type="text"
-                  name="website"
-                  tabIndex={-1}
-                  autoComplete="off"
-                  aria-hidden="true"
-                  value={honeypot}
-                  onChange={(e) => setHoneypot(e.target.value)}
-                  style={{
-                    position: 'absolute',
-                    left: '-9999px',
-                    width: '1px',
-                    height: '1px',
-                    overflow: 'hidden',
-                    opacity: 0,
-                    pointerEvents: 'none',
-                  }}
+                  placeholder="Primeiro nome"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  autoComplete="given-name"
+                  className="h-12 w-full rounded-xl border border-white/10 bg-surface/70 px-4 text-ink-primary placeholder:text-ink-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
                 />
+                {errors.name && <p className="mt-1 pl-1 text-xs text-red-400">{errors.name}</p>}
+              </div>
 
-                {status === 'error' && (
-                  <div
-                    role="alert"
-                    aria-live="assertive"
-                    className="flex items-center gap-2 border border-accent/40 bg-accent/5 p-3 font-mono text-sm text-accent"
-                  >
-                    <AlertCircle size={16} strokeWidth={1.5} />
-                    <span>{CONFIG.MODAL_ERROR}</span>
-                  </div>
-                )}
+              <div>
+                <input
+                  type="email"
+                  placeholder="Melhor e-mail"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  className="h-12 w-full rounded-xl border border-white/10 bg-surface/70 px-4 text-ink-primary placeholder:text-ink-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                />
+                {errors.email && <p className="mt-1 pl-1 text-xs text-red-400">{errors.email}</p>}
+              </div>
 
-                <button
-                  type="submit"
-                  disabled={status === 'loading'}
-                  className="w-full bg-accent py-4 font-mono text-sm uppercase tracking-widest text-page transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+              <div>
+                <input
+                  type="tel"
+                  placeholder="Telefone com DDD"
+                  value={phone}
+                  onChange={(e) => setPhone(maskPhone(e.target.value))}
+                  autoComplete="tel-national"
+                  inputMode="numeric"
+                  className="h-12 w-full rounded-xl border border-white/10 bg-surface/70 px-4 text-ink-primary placeholder:text-ink-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                />
+                {errors.phone && <p className="mt-1 pl-1 text-xs text-red-400">{errors.phone}</p>}
+              </div>
+
+              {status === 'error' && (
+                <div
+                  role="alert"
+                  aria-live="assertive"
+                  className="flex items-center gap-2 rounded-lg bg-red-500/10 p-3 text-sm text-red-400"
                 >
-                  {status === 'loading' ? 'Enviando...' : CONFIG.MODAL_SUBMIT}
-                </button>
+                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                  <span>{CONFIG.MODAL_ERROR}</span>
+                </div>
+              )}
 
-                <p className="text-center font-mono text-xs text-ink-muted">
-                  {CONFIG.MODAL_PRIVACY}
-                </p>
-              </form>
-            )}
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+              <button
+                type="submit"
+                disabled={status === 'loading'}
+                className="cta-button relative w-full text-base sm:text-lg"
+              >
+                {status === 'loading' ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  CONFIG.MODAL_SUBMIT
+                )}
+              </button>
+
+              <p className="pt-1 text-center text-xs text-ink-muted">{CONFIG.MODAL_PRIVACY}</p>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

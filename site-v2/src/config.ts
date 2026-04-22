@@ -44,7 +44,7 @@ export const CONFIG = {
   SOCIALPROOF_FOOTER: '19 prints reais. Zero stock. Zero ator pago.',
   SOCIALPROOF_IMAGES: Array.from(
     { length: 19 },
-    (_, i) => `/depoimentos/depoimento-${String(i + 1).padStart(2, '0')}.webp`
+    (_, i) => `${import.meta.env.BASE_URL}depoimentos/depoimento-${String(i + 1).padStart(2, '0')}.webp`
   ),
 
   // Big Idea

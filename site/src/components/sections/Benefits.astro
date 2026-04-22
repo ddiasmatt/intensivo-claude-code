@@ -1,34 +1,41 @@
 ---
-import { CONFIG } from '../../config';
+import { CONFIG } from '@/config';
+import BenefitCard from '@/components/react/BenefitCard';
 ---
-<section class="relative border-t border-rule py-24 sm:py-36 bg-surface">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
-    <p class="font-mono text-xs tracking-widest text-accent uppercase mb-6">
-      {CONFIG.BENEFITS_KICKER}
-    </p>
-    <h2 class="font-display text-[clamp(2rem,5vw,3.5rem)] leading-tight text-ink-primary mb-20">
-      {CONFIG.BENEFITS_HEADLINE}
-    </h2>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20">
-      {CONFIG.BENEFITS.map((b) => (
-        <article class="relative">
-          <p class="font-display text-[clamp(3rem,6vw,5rem)] text-accent leading-none mb-4">{b.number}</p>
-          <h3 class="font-display text-2xl sm:text-[26px] text-ink-primary mb-3">{b.title}</h3>
-          <p class="font-sans text-ink-secondary text-base leading-relaxed">{b.description}</p>
-        </article>
-      ))}
+<section id="benefits" class="relative py-20 md:py-28" data-gsap="reveal">
+  <div class="container-landing">
+    <div class="mb-10 max-w-3xl text-center md:mb-14">
+      <span
+        class="glass-chip mx-auto font-mono text-[10px] uppercase tracking-[0.22em] text-accent-hover"
+      >
+        <span class="h-1 w-1 rounded-full bg-accent"></span>
+        {CONFIG.BENEFITS_TAG}
+      </span>
+      <h2
+        class="mx-auto mt-5 text-3xl font-bold tracking-tight text-ink-primary md:text-4xl lg:text-5xl"
+      >
+        {CONFIG.BENEFITS_TITLE}
+      </h2>
     </div>
 
-    <button
-      type="button"
-      data-open-modal
-      data-cta-location="benefits"
-      class="mt-20 inline-flex items-center gap-3 bg-accent hover:bg-accent-hover text-page font-mono text-sm tracking-widest uppercase px-8 py-4 transition-colors"
-    >
-      {CONFIG.BENEFITS_CTA}
-    </button>
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+      {
+        CONFIG.BENEFITS.map((benefit) => (
+          <BenefitCard client:visible benefit={benefit} />
+        ))
+      }
+    </div>
 
+    <div class="mt-12 flex justify-center">
+      <button
+        type="button"
+        data-open-modal
+        class="cta-button relative overflow-hidden text-base sm:text-lg"
+      >
+        <span class="shimmer-overlay" aria-hidden="true"></span>
+        <span class="relative">{CONFIG.BENEFITS_CTA}</span>
+      </button>
+    </div>
   </div>
 </section>

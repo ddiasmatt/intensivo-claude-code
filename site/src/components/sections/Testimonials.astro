@@ -1,0 +1,88 @@
+---
+import { Marquee } from '@/components/ui/Marquee';
+
+const depoimentos = Array.from({ length: 19 }, (_, i) => ({
+  src: `/depoimentos/depoimento-${String(i + 1).padStart(2, '0')}.png`,
+  alt: `Depoimento ${i + 1}`,
+}));
+
+const row1 = depoimentos.slice(0, 7);
+const row2 = depoimentos.slice(7, 13);
+const row3 = depoimentos.slice(13);
+---
+
+<section id="testimonials" class="relative py-20 md:py-28" data-gsap="reveal">
+  <div class="container-landing mb-10 text-center md:mb-14">
+    <span
+      class="glass-chip font-mono text-[10px] uppercase tracking-[0.22em] text-accent-hover"
+    >
+      <span class="h-1 w-1 rounded-full bg-accent"></span>
+      Prova real
+    </span>
+    <h2
+      class="mt-5 text-3xl font-bold tracking-tight text-ink-primary md:text-4xl lg:text-5xl"
+    >
+      4.200+ alunos ja aplicaram o metodo no Ecossistema VUK.
+    </h2>
+    <p class="mx-auto mt-4 max-w-2xl text-base text-ink-secondary md:text-lg">
+      Rola pra ver alguns dos resultados que quem ja foi pro outro lado esta mandando.
+    </p>
+  </div>
+
+  <div class="space-y-3 md:space-y-4">
+    <Marquee
+      client:visible
+      pauseOnHover
+      repeat={3}
+      className="[--duration:50s]"
+    >
+      {
+        row1.map((d) => (
+          <img
+            src={d.src}
+            alt={d.alt}
+            loading="lazy"
+            class="h-24 w-auto flex-shrink-0 rounded-xl border border-white/10 bg-surface/60 object-cover shadow-[0_10px_30px_-15px_rgba(0,0,0,0.6)] sm:h-28 md:h-32"
+          />
+        ))
+      }
+    </Marquee>
+
+    <Marquee
+      client:visible
+      reverse
+      pauseOnHover
+      repeat={3}
+      className="[--duration:60s]"
+    >
+      {
+        row2.map((d) => (
+          <img
+            src={d.src}
+            alt={d.alt}
+            loading="lazy"
+            class="h-24 w-auto flex-shrink-0 rounded-xl border border-white/10 bg-surface/60 object-cover shadow-[0_10px_30px_-15px_rgba(0,0,0,0.6)] sm:h-28 md:h-32"
+          />
+        ))
+      }
+    </Marquee>
+
+    <Marquee
+      client:visible
+      pauseOnHover
+      repeat={3}
+      className="[--duration:55s]"
+    >
+      {
+        row3.map((d) => (
+          <img
+            src={d.src}
+            alt={d.alt}
+            loading="lazy"
+            class="h-24 w-auto flex-shrink-0 rounded-xl border border-white/10 bg-surface/60 object-cover shadow-[0_10px_30px_-15px_rgba(0,0,0,0.6)] sm:h-28 md:h-32"
+          />
+        ))
+      }
+    </Marquee>
+  </div>
+</section>

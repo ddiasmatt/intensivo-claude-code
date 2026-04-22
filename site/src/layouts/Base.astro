@@ -1,69 +1,105 @@
 ---
-// site/src/layouts/Base.astro
-import '../styles/global.css';
-import { CONFIG } from '../config';
-import { buildStructuredData } from '../lib/structured-data';
-import CaptureModal from '../components/react/CaptureModal';
+import '@/styles/global.css';
 
 interface Props {
-  title?: string;
-  description?: string;
+  title: string;
+  description: string;
+  canonical?: string;
+  ogImage?: string;
 }
 
 const {
-  title = 'Intensivo Claude Code · 16/05 ao vivo no Zoom',
-  description = 'Sabado intensivo com Mateus Dias. Construa 10 agentes de IA sem programar. Grupo VIP com oferta unica R$ 27.',
+  title,
+  description,
+  canonical = 'https://intensivo.grupovuk.com.br/',
+  ogImage = '/og-image.png',
 } = Astro.props;
 
 const GA_ID = import.meta.env.PUBLIC_GA_ID ?? '';
 const META_PIXEL = import.meta.env.PUBLIC_META_PIXEL_ID ?? '';
-const canonical = 'https://icc.thesociety.com.br/lpv2/';
 
-const jsonLd = buildStructuredData({
-  canonical,
-  eventStart: CONFIG.EVENT_START_ISO,
-  eventEnd: CONFIG.EVENT_END_ISO,
-  redirectUrl: CONFIG.REDIRECT_URL,
-});
+const eventSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Event',
+  name: 'Intensivo Claude Code',
+  startDate: '2026-05-16T09:00:00-03:00',
+  endDate: '2026-05-16T16:00:00-03:00',
+  eventAttendanceMode: 'https://schema.org/OnlineEventAttendanceMode',
+  eventStatus: 'https://schema.org/EventScheduled',
+  location: { '@type': 'VirtualLocation', url: 'https://zoom.us' },
+  description:
+    'Evento ao vivo de 1 dia. Monte o Sistema 10x com Claude Code.',
+  organizer: {
+    '@type': 'Organization',
+    name: 'Grupo VUK',
+    url: 'https://grupovuk.com.br',
+  },
+  image: [`${canonical.replace(/\/$/, '')}${ogImage}`],
+  offers: {
+    '@type': 'Offer',
+    priceCurrency: 'BRL',
+    price: '27',
+    availability: 'https://schema.org/InStock',
+    validFrom: '2026-04-20',
+    url: canonical,
+  },
+};
 ---
+
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="dark">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0A0A0B" />
+    <meta name="color-scheme" content="dark" />
+
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="keywords" content="claude code, intensivo, mateus dias, agentes de ia, grupo vuk, ai builder, no-code, saas brasileiro" />
+    <meta
+      name="keywords"
+      content="claude code, intensivo claude code, sistema 10x, ia para empreendedores, mateus dias, grupo vuk, chatfunnel, agentes de ia, automacao com ia"
+    />
     <meta name="author" content="Grupo VUK" />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
     <link rel="canonical" href={canonical} />
-    <meta name="theme-color" content="#FBFAF7" />
-    <link rel="manifest" href={`${import.meta.env.BASE_URL}manifest.webmanifest`} />
-    <link rel="icon" href={`${import.meta.env.BASE_URL}favicon.ico`} sizes="any" />
-    <link rel="icon" type="image/png" href={`${import.meta.env.BASE_URL}favicon.png`} />
-    <link rel="apple-touch-icon" href={`${import.meta.env.BASE_URL}apple-touch-icon.png`} />
 
-    <!-- Open Graph -->
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content={`${canonical}og-image.png`} />
-    <meta property="og:locale" content="pt_BR" />
     <meta property="og:url" content={canonical} />
-    <meta name="twitter:card" content="summary_large_image" />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content="pt_BR" />
 
-    <!-- Fonts -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500..700;1,9..144,500&family=Inter+Tight:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
 
-    <!-- GA4 condicional -->
+    <!-- Schema.org Event -->
+    <script type="application/ld+json" set:html={JSON.stringify(eventSchema)} />
+
+    <!-- Google Analytics 4 -->
     {GA_ID && (
       <>
         <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
         <script is:inline define:vars={{ GA_ID }}>
           window.dataLayer = window.dataLayer || [];
-          function gtag() { window.dataLayer.push(arguments); }
+          function gtag() {
+            window.dataLayer.push(arguments);
+          }
           window.gtag = gtag;
           gtag('js', new Date());
           gtag('config', GA_ID);
@@ -71,26 +107,37 @@ const jsonLd = buildStructuredData({
       </>
     )}
 
-    <!-- Meta Pixel condicional (v1: vazio, script nao injeta) -->
+    <!-- Meta Pixel -->
     {META_PIXEL && (
       <script is:inline define:vars={{ META_PIXEL }}>
-        /* snippet oficial Meta Pixel; ver analytics-pattern.md secao 2 */
+        !(function (f, b, e, v, n, t, s) {
+          if (f.fbq) return;
+          n = f.fbq = function () {
+            n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+          };
+          if (!f._fbq) f._fbq = n;
+          n.push = n;
+          n.loaded = !0;
+          n.version = '2.0';
+          n.queue = [];
+          t = b.createElement(e);
+          t.async = !0;
+          t.src = v;
+          s = b.getElementsByTagName(e)[0];
+          s.parentNode.insertBefore(t, s);
+        })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+        window.fbq('init', META_PIXEL);
+        window.fbq('track', 'PageView');
       </script>
     )}
-
-    <!-- JSON-LD: Organization + WebSite + Event -->
-    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   </head>
-  <body class="bg-page text-ink-primary font-sans antialiased">
+  <body>
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-white"
+    >
+      Pular para conteudo
+    </a>
     <slot />
-
-    <!-- Modal de captura (React island). client:load porque o modal pode ser acionado
-         por CTA no hero antes de qualquer scroll. Nao pode usar client:visible. -->
-    <CaptureModal client:load />
-
-    <!-- Delegador global de cliques em [data-open-modal]. Astro processa o import. -->
-    <script>
-      import '../scripts/modal-trigger.ts';
-    </script>
   </body>
 </html>

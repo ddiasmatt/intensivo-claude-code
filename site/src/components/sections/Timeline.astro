@@ -1,33 +1,55 @@
 ---
-import { CONFIG } from '../../config';
+import { CONFIG } from '@/config';
+import TimelineWrapper from '@/components/react/TimelineWrapper';
 ---
-<section class="relative border-t border-rule py-24 sm:py-36 bg-page">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
-    <p class="font-mono text-xs tracking-widest text-accent uppercase mb-6">
-      {CONFIG.TIMELINE_KICKER}
-    </p>
-    <h2 class="font-display text-[clamp(2rem,5vw,3.5rem)] leading-tight text-ink-primary mb-6">
-      {CONFIG.TIMELINE_HEADLINE}
-    </h2>
-    <p class="font-sans text-ink-secondary text-lg mb-16 max-w-2xl">
-      {CONFIG.TIMELINE_SUBHEADLINE}
-    </p>
+<section id="timeline" class="relative py-20 md:py-28" data-gsap="reveal">
+  <div class="container-landing">
+    <div class="mb-10 max-w-3xl text-center md:mx-auto md:mb-14">
+      <span
+        class="glass-chip mx-auto font-mono text-[10px] uppercase tracking-[0.22em] text-accent-hover"
+      >
+        <span class="h-1 w-1 rounded-full bg-accent"></span>
+        {CONFIG.TIMELINE_TAG}
+      </span>
+      <h2
+        class="mx-auto mt-5 text-3xl font-bold tracking-tight text-ink-primary md:text-4xl lg:text-5xl"
+      >
+        {CONFIG.TIMELINE_TITLE}
+      </h2>
+      <p class="mx-auto mt-4 text-base text-ink-secondary md:text-lg">
+        {CONFIG.TIMELINE_SUBTITLE}
+      </p>
+    </div>
 
-    <ol class="relative flex flex-col md:flex-row md:items-start md:before:content-[''] md:before:absolute md:before:top-4 md:before:left-0 md:before:right-0 md:before:h-px md:before:bg-rule">
-      {CONFIG.TIMELINE_BLOCKS.map((t) => (
-        <li class="relative md:flex-1 md:px-6 py-8 md:py-0 border-b md:border-b-0 md:border-r last:border-r-0 border-rule">
-          <span class="hidden md:block w-2 h-2 rounded-full bg-accent mb-6 -translate-y-[5px]"></span>
-          <span class="font-mono text-xs tracking-wider text-accent block mb-3">{t.time}</span>
-          <h3 class="font-display text-xl text-ink-primary mb-2">{t.title}</h3>
-          <p class="font-sans text-sm text-ink-secondary leading-relaxed">{t.description}</p>
-        </li>
-      ))}
-    </ol>
+    <TimelineWrapper client:visible blocks={CONFIG.TIMELINE_BLOCKS} />
 
-    <p class="mt-12 font-mono text-xs tracking-widest text-ink-muted uppercase">
+    <p class="mx-auto mt-4 max-w-2xl text-center text-sm text-ink-muted md:text-base">
       {CONFIG.TIMELINE_FOOTER}
     </p>
 
+    <div
+      class="mx-auto mt-16 grid max-w-4xl gap-8 overflow-hidden rounded-3xl border border-white/10 bg-surface/60 p-8 backdrop-blur-sm md:grid-cols-[auto_1fr] md:p-10"
+    >
+      <img
+        src="/mateus.webp"
+        alt="Mateus Dias"
+        loading="lazy"
+        width="180"
+        height="180"
+        class="mx-auto h-36 w-36 rounded-2xl border border-accent/25 object-cover shadow-[0_20px_60px_-25px_rgba(224,122,58,0.4)] md:mx-0 md:h-44 md:w-44"
+      />
+      <div>
+        <p class="font-mono text-[11px] uppercase tracking-[0.22em] text-accent-hover">
+          {CONFIG.PRESENTER_TITLE}
+        </p>
+        <h3 class="mt-2 text-2xl font-bold text-ink-primary md:text-3xl">
+          {CONFIG.PRESENTER_NAME}
+        </h3>
+        <div class="mt-4 whitespace-pre-line text-sm leading-relaxed text-ink-secondary md:text-base">
+          {CONFIG.PRESENTER_BIO}
+        </div>
+      </div>
+    </div>
   </div>
 </section>
