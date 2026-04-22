@@ -6,7 +6,7 @@ prd: docs/prds/landing-timeline-v1-vertical.md
 complexity: P
 model: implementer-haiku
 depends_on: []
-status: pending
+status: done
 created: 2026-04-22
 tags: [story, landing, landing-timeline-v1-vertical]
 ---

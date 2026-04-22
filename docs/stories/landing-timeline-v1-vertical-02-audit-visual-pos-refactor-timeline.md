@@ -6,7 +6,8 @@ prd: docs/prds/landing-timeline-v1-vertical.md
 complexity: P
 model: implementer-haiku
 depends_on: [landing-timeline-v1-vertical-01]
-status: pending
+status: done
+note: validacao manual pendente antes do merge (Chrome DevTools + Lighthouse). Runbook em docs/logs/squad-dev/2026-04-22.md entrada das 19:58.
 created: 2026-04-22
 tags: [story, landing, landing-timeline-v1-vertical, audit]
 ---
