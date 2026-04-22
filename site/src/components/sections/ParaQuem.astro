@@ -1,0 +1,24 @@
+---
+import { CONFIG } from '../../config';
+---
+<section class="relative border-t border-rule py-24 sm:py-36 bg-surface">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <p class="font-mono text-xs tracking-widest text-accent uppercase mb-6">
+      {CONFIG.PARAQUEM_KICKER}
+    </p>
+    <h2 class="font-display text-[clamp(2rem,5vw,3.5rem)] leading-tight text-ink-primary mb-16">
+      {CONFIG.PARAQUEM_HEADLINE}
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-0">
+      {CONFIG.PARAQUEM.map((perfil) => (
+        <article class="border-b border-rule md:border-b-0 md:border-r last:border-r-0 py-8 md:py-0 md:px-8 first:pl-0 last:pr-0">
+          <h3 class="font-display text-xl text-ink-primary mb-3">{perfil.title}</h3>
+          <p class="font-sans text-sm text-ink-secondary leading-relaxed">{perfil.description}</p>
+        </article>
+      ))}
+    </div>
+
+  </div>
+</section>

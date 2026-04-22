@@ -1,0 +1,49 @@
+# Intensivo Claude Code
+
+Intensivo online ao vivo: 16 de maio de 2026, sábado de 09h às 17h no Zoom com Mateus Dias (Grupo VUK). Aprenda do zero a ferramenta de IA preferida dos empreendedores e crie em minutos toda a estrutura digital do seu negócio.
+
+Oferta única: R$27 para quem entra no grupo VIP antes de 26/04/2026. Carrinho público abre em 30/04 a R$47.
+
+## Para quem
+
+Empresários, empreendedores, profissionais liberais e criadores não-dev que querem construir produtos e ferramentas digitais com IA sem programar manualmente nem contratar programador.
+
+## O que você sai entregando
+
+- Claude Code configurado e operando com você
+- 4 agentes de IA rodando na sua operação
+- Estrutura digital do seu negócio pronta para aplicar
+- Trial ativado do ChatFunnel (plataforma de automação com IA)
+
+## Agenda do dia
+
+09h às 12h - Bloco 1: Fundamentos do Claude Code. Instalação, primeiros passos e tour completo. Sai da manhã com o ambiente rodando e entendendo cada alavanca.
+
+12h às 14h - Intervalo para almoço.
+
+14h às 16h - Bloco 2: MCP, Agentes, Skills e Projetos Práticos. Extensões avançadas. Configuração de MCPs, construção de agentes, criação de skills e aplicação tudo junto em projetos práticos ao vivo.
+
+16h às 17h - Bloco 3: Apresentação do ecossistema AI Society. Como o ecossistema acelera o que você acabou de aprender e continua te puxando pra cima depois do sábado.
+
+Gravação liberada para todos os inscritos.
+
+## Benefícios exclusivos do grupo VIP
+
+- Preço travado em R$27 (carrinho público abre a R$47)
+- Bônus de preparação: guia de setup e checklist no e-mail de boas-vindas
+- 72h de vantagem para acessar o carrinho antes do público geral
+- Trial de 30 dias do ChatFunnel (R$497/mês após trial)
+
+## Garantia
+
+7 dias para reembolso integral contando da data do evento, sem justificativa.
+
+## Custos de operação pós-evento
+
+Claude Code Max (R$20/mês) + ChatFunnel (R$497/mês após trial) ou alternativas open-source compatíveis. Infra mínima: ~R$39/mês.
+
+## Links
+
+Landing: intensivo.grupovuk.com.br
+Organizador: Grupo VUK (grupovuk.com.br)
+Instrutor: Mateus Dias (Founder, CEO ChatFunnel, CEO ThumbFlow, Founder AI Sigma Studio)

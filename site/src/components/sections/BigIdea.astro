@@ -1,0 +1,44 @@
+---
+import { CONFIG } from '../../config';
+---
+
+<section class="relative border-t border-rule bg-surface py-24 sm:py-36">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <p class="font-mono text-xs tracking-widest text-accent uppercase mb-8">
+      {CONFIG.BIGIDEA_KICKER}
+    </p>
+    <h2
+      class="font-display text-[clamp(2.25rem,5.5vw,4.25rem)] leading-[1.05] text-ink-primary"
+      data-mask-reveal
+    >
+      {CONFIG.BIGIDEA_HEADLINE}
+    </h2>
+    <div class="mt-12 space-y-6 font-sans text-ink-secondary text-lg leading-relaxed max-w-2xl">
+      <p>{CONFIG.BIGIDEA_PARA1}</p>
+      <p>{CONFIG.BIGIDEA_PARA2}</p>
+    </div>
+    <p class="mt-16 font-mono italic text-sm text-ink-muted">
+      {CONFIG.BIGIDEA_SIGNATURE}
+    </p>
+  </div>
+</section>
+
+<script>
+  import gsap from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  document.querySelectorAll('[data-mask-reveal]').forEach((el) => {
+    gsap.from(el, {
+      clipPath: 'inset(0 100% 0 0)',
+      duration: 1,
+      ease: 'expo.out',
+      scrollTrigger: {
+        trigger: el,
+        start: 'top 80%',
+        toggleActions: 'play none none none',
+      },
+    });
+  });
+</script>

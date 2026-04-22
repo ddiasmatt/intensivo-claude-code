@@ -1,0 +1,42 @@
+---
+import { CONFIG } from '../../config';
+---
+<section class="relative border-t border-rule py-24 sm:py-36 bg-page" id="faq">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <p class="font-mono text-xs tracking-widest text-accent uppercase mb-6">
+      {CONFIG.FAQ_KICKER}
+    </p>
+
+    <h2 class="font-display text-[clamp(2rem,5vw,3.5rem)] leading-tight text-ink-primary mb-16">
+      {CONFIG.FAQ_HEADLINE}
+    </h2>
+
+    <ul class="divide-y divide-rule border-t border-b border-rule" id="faq-list">
+      {CONFIG.FAQ_ITEMS.map((item) => (
+        <li>
+          <details class="group">
+            <summary class="flex justify-between items-center py-6 cursor-pointer font-display text-xl text-ink-primary list-none">
+              {item.question}
+              <span class="ml-4 shrink-0 text-accent font-mono text-2xl transition-transform group-open:rotate-45">+</span>
+            </summary>
+            <p class="pb-6 font-sans text-ink-secondary leading-relaxed">{item.answer}</p>
+          </details>
+        </li>
+      ))}
+    </ul>
+
+  </div>
+</section>
+
+<script>
+  // 1 aberto por vez — fecha outros <details> ao abrir um novo
+  const list = document.getElementById('faq-list');
+  list?.addEventListener('toggle', (e) => {
+    const target = e.target as HTMLDetailsElement;
+    if (!target.open) return;
+    list.querySelectorAll('details[open]').forEach((d) => {
+      if (d !== target) (d as HTMLDetailsElement).open = false;
+    });
+  }, true);
+</script>
