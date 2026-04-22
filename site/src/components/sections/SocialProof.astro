@@ -2,20 +2,23 @@
 import { CONFIG } from '../../config';
 
 const imgs = CONFIG.SOCIALPROOF_IMAGES;
-const track = [...imgs, ...imgs]; // duplica para loop seamless em -50%
+const rotate = <T,>(arr: T[], n: number) => [...arr.slice(n), ...arr.slice(0, n)];
+const row1 = [...imgs, ...imgs];
+const row2 = [...rotate(imgs, 7), ...rotate(imgs, 7)];
+const row3 = [...rotate(imgs, 13), ...rotate(imgs, 13)];
 ---
 
-<section class="relative border-t border-rule py-20 sm:py-28 overflow-hidden bg-page">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
-    <h2 class="font-display text-[clamp(2rem,5vw,3.25rem)] leading-tight text-ink-primary">
+<section class="relative border-t border-rule py-12 sm:py-16 overflow-hidden bg-page">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+    <h2 class="font-display text-[clamp(1.75rem,4vw,2.5rem)] leading-tight text-ink-primary">
       {CONFIG.SOCIALPROOF_HEADLINE}
     </h2>
-    <p class="mt-4 font-sans text-ink-secondary text-lg max-w-2xl">{CONFIG.SOCIALPROOF_SUB}</p>
+    <p class="mt-3 font-sans text-ink-secondary text-base max-w-2xl">{CONFIG.SOCIALPROOF_SUB}</p>
   </div>
 
-  <div class="flex flex-col gap-6">
-    <div class="marquee flex gap-6 animate-marquee-left hover:[animation-play-state:paused]">
-      {track.map((src, i) => (
+  <div class="flex flex-col gap-4">
+    <div class="marquee flex gap-4 animate-marquee-left hover:[animation-play-state:paused]">
+      {row1.map((src) => (
         <img
           src={src}
           alt=""
@@ -23,12 +26,12 @@ const track = [...imgs, ...imgs]; // duplica para loop seamless em -50%
           decoding="async"
           width="320"
           height="240"
-          class="h-60 w-auto flex-shrink-0 object-contain border border-rule bg-elevated"
+          class="h-40 w-auto flex-shrink-0 object-contain border border-rule bg-elevated"
         />
       ))}
     </div>
-    <div class="marquee flex gap-6 animate-marquee-right hover:[animation-play-state:paused]">
-      {track.map((src, i) => (
+    <div class="marquee flex gap-4 animate-marquee-right hover:[animation-play-state:paused]">
+      {row2.map((src) => (
         <img
           src={src}
           alt=""
@@ -36,13 +39,22 @@ const track = [...imgs, ...imgs]; // duplica para loop seamless em -50%
           decoding="async"
           width="320"
           height="240"
-          class="h-60 w-auto flex-shrink-0 object-contain border border-rule bg-elevated"
+          class="h-40 w-auto flex-shrink-0 object-contain border border-rule bg-elevated"
+        />
+      ))}
+    </div>
+    <div class="marquee flex gap-4 animate-marquee-left hover:[animation-play-state:paused]">
+      {row3.map((src) => (
+        <img
+          src={src}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          width="320"
+          height="240"
+          class="h-40 w-auto flex-shrink-0 object-contain border border-rule bg-elevated"
         />
       ))}
     </div>
   </div>
-
-  <p class="mt-12 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 font-mono text-xs tracking-widest text-ink-muted uppercase">
-    {CONFIG.SOCIALPROOF_FOOTER}
-  </p>
 </section>

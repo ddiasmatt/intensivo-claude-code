@@ -24,6 +24,9 @@ tags: [story, landing, intensivo-claude-code]
 
 **Codigo de referencia:**
 
+> [!warning] Tailwind v4 em Astro
+> NAO instalar `@astrojs/tailwind`. Essa integration e v3-only (peer dep `tailwindcss@^3.0.24`) e nao foi portada pro v4. O caminho oficial do Tailwind v4 em Astro e o plugin Vite `@tailwindcss/vite`.
+
 ```json
 // site/package.json
 {
@@ -38,7 +41,7 @@ tags: [story, landing, intensivo-claude-code]
   },
   "dependencies": {
     "@astrojs/react": "^3",
-    "@astrojs/tailwind": "^5",
+    "@tailwindcss/vite": "^4",
     "astro": "^4",
     "motion": "^12",
     "gsap": "^3",
@@ -60,10 +63,11 @@ tags: [story, landing, intensivo-claude-code]
 // site/astro.config.mjs
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
-import tailwind from '@astrojs/tailwind';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  integrations: [react(), tailwind({ applyBaseStyles: false })],
+  integrations: [react()],
+  vite: { plugins: [tailwindcss()] },
   output: 'static',
 });
 ```

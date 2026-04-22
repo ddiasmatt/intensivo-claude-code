@@ -31,13 +31,13 @@ Nenhum desvio da ordem canonica. Stories 9 e 10 agrupam 3 secoes cada para mante
 
 ## Dependencias npm
 
-Conforme PRD secao 6, nenhuma adicao alem do template minimo de `landing-page-pattern.md`. Tailwind fixado em `^4` (stack do CLAUDE.md global manda v4, template da skill diz `^3.4`; prevalece o global). `class-variance-authority` removido (nao precisamos, variantes simples com `clsx` bastam). `tailwindcss-animate` removido (keyframes locais cobrem).
+Conforme PRD secao 6. Tailwind v4 usa o plugin Vite oficial (`@tailwindcss/vite`), **nao** a integration `@astrojs/tailwind` — essa ultima e v3-only e nunca foi portada pro v4. `class-variance-authority` removido (variantes simples com `clsx`). `tailwindcss-animate` removido (keyframes proprias via `@theme`).
 
 ```json
 {
   "dependencies": {
     "@astrojs/react": "^3",
-    "@astrojs/tailwind": "^5",
+    "@tailwindcss/vite": "^4",
     "astro": "^4",
     "motion": "^12",
     "gsap": "^3",
@@ -66,7 +66,7 @@ Conforme PRD secao 6, nenhuma adicao alem do template minimo de `landing-page-pa
 - **Arquivos a modificar:** nenhum
 - **Patterns a seguir:** `~/.claude/skills/landing-page-prd/references/landing-page-pattern.md` secao 1 (Stack Obrigatorio)
 
-**Contexto:** Pasta `site/` existe vazia. Scaffolding Astro minimal com React e Tailwind integrados. NAO usar template oficial interativo (`npm create astro@latest`); criar arquivos direto para ter controle sobre deps fixadas.
+**Contexto:** Pasta `site/` existe vazia. Scaffolding Astro minimal com React e Tailwind v4 integrados via plugin Vite oficial. NAO usar template oficial interativo (`npm create astro@latest`); criar arquivos direto para ter controle sobre deps fixadas. **NAO instalar `@astrojs/tailwind`** — esse pacote e v3-only e esta travado (peer dep `tailwindcss@^3.0.24`). Tailwind v4 em Astro usa `@tailwindcss/vite` + `vite.plugins` no config.
 
 **Codigo de referencia:**
 
@@ -84,7 +84,7 @@ Conforme PRD secao 6, nenhuma adicao alem do template minimo de `landing-page-pa
   },
   "dependencies": {
     "@astrojs/react": "^3",
-    "@astrojs/tailwind": "^5",
+    "@tailwindcss/vite": "^4",
     "astro": "^4",
     "motion": "^12",
     "gsap": "^3",
@@ -106,10 +106,11 @@ Conforme PRD secao 6, nenhuma adicao alem do template minimo de `landing-page-pa
 // site/astro.config.mjs
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
-import tailwind from '@astrojs/tailwind';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  integrations: [react(), tailwind({ applyBaseStyles: false })],
+  integrations: [react()],
+  vite: { plugins: [tailwindcss()] },
   output: 'static',
 });
 ```
@@ -133,78 +134,70 @@ cd site && npm install && npx astro build && npx astro check
 
 ---
 
-### Story 02 — Tokens Tailwind traduzidos da Fase 0
+### Story 02 — Tokens Tailwind v4 traduzidos da Fase 0
 
 - **Complexidade:** P
 - **Modelo sugerido:** implementer-haiku
 - **Depende de:** Story 01
-- **Arquivos a criar:** `site/tailwind.config.mjs`, `site/src/styles/global.css`
-- **Arquivos a modificar:** `site/src/pages/index.astro` (importa `global.css`)
+- **Arquivos a criar:** `site/src/styles/global.css`
+- **Arquivos a modificar:** `site/src/pages/index.astro` (importa `global.css` via Base layout na Story 04)
 - **Patterns a seguir:** `~/.claude/skills/landing-page-prd/references/landing-page-pattern.md` secao 3 (Design Tokens)
 
-**Contexto:** Traduzir a tabela da Fase 0 (PRD secao 3.3) e fontes (PRD secao 3.4) para o `tailwind.config.mjs`. Incluir keyframes `mask-reveal`, `live-pulse`, `marquee-left`, `marquee-right`. Global CSS carrega fontes do Google, reset e `prefers-reduced-motion`.
+**Contexto:** Traduzir a tabela da Fase 0 (PRD secao 3.3) e fontes (PRD secao 3.4) para `@theme` em `global.css`. Incluir keyframes `mask-reveal`, `live-pulse`, `marquee-left`, `marquee-right`. No Tailwind v4 nao existe `tailwind.config.mjs` — toda configuracao vive no CSS via `@theme`, e os tokens viram classes automaticamente (`--color-page` → `bg-page`, `--font-display` → `font-display`, `--animate-live-pulse` → `animate-live-pulse`).
 
 **Codigo de referencia:**
 
-```js
-// site/tailwind.config.mjs (copia literal do PRD secao 5.7)
-export default {
-  content: ['./src/**/*.{astro,html,js,jsx,ts,tsx}'],
-  theme: {
-    extend: {
-      fontFamily: {
-        display: ['Fraunces', 'ui-serif', 'serif'],
-        sans: ['"Inter Tight"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
-      },
-      colors: {
-        page: '#FBFAF7',
-        surface: '#F3F1EC',
-        elevated: '#FFFFFF',
-        rule: '#D9D4CB',
-        accent: {
-          DEFAULT: '#E4572E',
-          hover: '#C84521',
-          deep: '#A63A1F',
-        },
-        ink: {
-          primary: '#0B0B0D',
-          secondary: '#4A4744',
-          muted: '#8A8580',
-        },
-      },
-      keyframes: {
-        'mask-reveal': {
-          '0%':   { 'clip-path': 'inset(0 100% 0 0)' },
-          '100%': { 'clip-path': 'inset(0 0 0 0)' },
-        },
-        'live-pulse': {
-          '0%, 100%': { opacity: '1' },
-          '50%':       { opacity: '0.4' },
-        },
-        'marquee-left':  { '0%': { transform: 'translateX(0)' },       '100%': { transform: 'translateX(-50%)' } },
-        'marquee-right': { '0%': { transform: 'translateX(-50%)' },    '100%': { transform: 'translateX(0)' }    },
-      },
-      animation: {
-        'mask-reveal':   'mask-reveal 0.8s cubic-bezier(0.77, 0, 0.175, 1) both',
-        'live-pulse':    'live-pulse 1.6s ease-in-out infinite',
-        'marquee-left':  'marquee-left 55s linear infinite',
-        'marquee-right': 'marquee-right 55s linear infinite',
-      },
-    },
-  },
-  plugins: [],
-};
-```
-
 ```css
 /* site/src/styles/global.css */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-page: #FBFAF7;
+  --color-surface: #F3F1EC;
+  --color-elevated: #FFFFFF;
+  --color-rule: #D9D4CB;
+
+  --color-accent: #E4572E;
+  --color-accent-hover: #C84521;
+  --color-accent-deep: #A63A1F;
+
+  --color-ink-primary: #0B0B0D;
+  --color-ink-secondary: #4A4744;
+  --color-ink-muted: #8A8580;
+
+  --font-display: "Fraunces", ui-serif, serif;
+  --font-sans: "Inter Tight", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --animate-mask-reveal: mask-reveal 0.8s cubic-bezier(0.77, 0, 0.175, 1) both;
+  --animate-live-pulse: live-pulse 1.6s ease-in-out infinite;
+  --animate-marquee-left: marquee-left 55s linear infinite;
+  --animate-marquee-right: marquee-right 55s linear infinite;
+
+  @keyframes mask-reveal {
+    0%   { clip-path: inset(0 100% 0 0); }
+    100% { clip-path: inset(0 0 0 0); }
+  }
+  @keyframes live-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.4; }
+  }
+  @keyframes marquee-left {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  @keyframes marquee-right {
+    0%   { transform: translateX(-50%); }
+    100% { transform: translateX(0); }
+  }
+}
 
 @layer base {
-  html { font-family: theme('fontFamily.sans'); color: theme('colors.ink.primary'); background: theme('colors.page'); }
+  html {
+    font-family: var(--font-sans);
+    color: var(--color-ink-primary);
+    background: var(--color-page);
+  }
   body { min-height: 100vh; }
 }
 
@@ -217,6 +210,14 @@ export default {
   }
 }
 ```
+
+**Armadilhas do v4:**
+- **Nao** criar `tailwind.config.mjs`. Se algum implementer criar, remover no review.
+- **Nao** usar `@tailwind base;`/`components;`/`utilities;` — virou `@import "tailwindcss";` (unico).
+- **Nao** usar `theme('colors.ink.primary')` dentro de CSS — virou `var(--color-ink-primary)`.
+- `content: ['./src/**/*.{...}']` nao existe mais — v4 detecta automaticamente os templates via plugin Vite.
+- `keyframes` vivem **dentro** do bloco `@theme` (ou fora, mas precisam estar casados com um `--animate-<nome>`).
+- Cor com opacidade (`bg-accent/40`) funciona se `--color-accent` for um valor solido (nao `oklch(...)` sem alpha channel). Nossos hex sao solidos, OK.
 
 **Criterios de aceite:**
 1. QUANDO aplicar `class="bg-page text-ink-primary"`, ENTAO DOM renderiza com as cores exatas da Fase 0

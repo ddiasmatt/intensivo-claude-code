@@ -6,7 +6,7 @@ prd: docs/prds/intensivo-claude-code.md
 complexity: M
 model: implementer-sonnet
 depends_on: [Story 04]
-status: in_progress
+status: done
 created: 2026-04-22
 tags: [story, landing, intensivo-claude-code]
 ---

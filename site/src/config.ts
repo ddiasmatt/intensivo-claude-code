@@ -26,13 +26,12 @@ export const CONFIG = {
   HERO_H1_LINES: [
     { text: 'Intensivo', style: 'default' },
     { text: 'Claude Code', style: 'bold-accent-on-claude' },
-    { text: 'em um sábado.', style: 'italic-light' },
   ],
   HERO_SUBHEADLINE: 'Aprenda do zero a ferramenta de IA preferida dos empreendedores e crie em minutos toda a estrutura digital do seu negócio.',
   HERO_ICP: 'Intensivo para empresários, empreendedores e profissionais liberais.',
   HERO_OFFER: 'Oferta única R$ 27. Entre no grupo para receber.',
   HERO_CTA: 'ENTRAR NO GRUPO E VER A OFERTA',
-  HERO_MICROCOPY: 'Sábado 16/05 . 09h às 17h . gravação liberada',
+  HERO_MICROCOPY: 'Sábado 16/05 . 09h às 17h',
   HERO_BULLETS: [
     'Sem programar código',
     'Sem contratar mais gente',
@@ -45,7 +44,7 @@ export const CONFIG = {
   SOCIALPROOF_FOOTER: '19 prints reais. Zero stock. Zero ator pago.',
   SOCIALPROOF_IMAGES: Array.from(
     { length: 19 },
-    (_, i) => `/depoimentos/depoimento-${String(i + 1).padStart(2, '0')}.png`
+    (_, i) => `/depoimentos/depoimento-${String(i + 1).padStart(2, '0')}.webp`
   ),
 
   // Big Idea
@@ -93,9 +92,10 @@ export const CONFIG = {
     },
   ],
 
-  // Para Quem É (6 perfis)
+  // Para Quem É (5 perfis + P.S. outlier + micro-CTA)
   PARAQUEM_KICKER: 'PERFIL DE QUEM VAI',
-  PARAQUEM_HEADLINE: 'Se algum desses é você, o intensivo é pra você.',
+  PARAQUEM_HEADLINE: 'Marque os que se aplicam a você.',
+  PARAQUEM_SUB: 'Autoteste. Marque quem você é. Nenhum dado é enviado.',
   PARAQUEM: [
     {
       title: 'Empresários e empreendedores',
@@ -117,11 +117,13 @@ export const CONFIG = {
       title: 'Gestores e analistas',
       description: 'Que vivem em planilhas e processos manuais e querem construir ferramentas internas.',
     },
-    {
-      title: 'Você não precisa saber programar',
-      description: 'O pré-requisito é ter uma ideia de problema que vale resolver. A IA cuida do resto.',
-    },
   ],
+  PARAQUEM_FOOTNOTE: {
+    label: 'VOCÊ NÃO PRECISA SABER PROGRAMAR',
+    body: 'O pré-requisito é ter uma ideia de problema que vale resolver. A IA cuida do resto.',
+  },
+  PARAQUEM_CTA_TEXT: 'Se você se reconheceu em algum desses, entra no grupo e pega a oferta única de R$ 27.',
+  PARAQUEM_CTA_BUTTON: 'ENTRAR NO GRUPO',
 
   // Benefits (4)
   BENEFITS_KICKER: 'O QUE SÓ QUEM ESTÁ NO GRUPO TEM',
@@ -176,7 +178,7 @@ export const CONFIG = {
       description: 'Como o ecossistema acelera o que você acabou de aprender e continua te puxando pra cima depois do sábado.',
     },
   ],
-  TIMELINE_FOOTER: 'Sábado 16/05 . 09h às 17h . ao vivo no Zoom com gravação liberada.',
+  TIMELINE_FOOTER: 'Sábado 16/05 . 09h às 17h . ao vivo no Zoom.',
 
   // Autoridade - Mateus Dias
   AUTHORITY_KICKER: 'QUEM CONDUZ',
@@ -240,4 +242,26 @@ export const CONFIG = {
 
   // Footer
   COPYRIGHT: '© 2026 Grupo VUK. Todos os direitos reservados.',
+
+  // Hero Mission Control
+  HERO_MISSION_CONTROL: {
+    EYEBROW: 'MISSION CONTROL',
+    BADGE: '10 AGENTES ATIVOS',
+    LIVE_LABEL: '/live',
+    COUNTER_LABEL: 'TAREFAS CONCLUÍDAS HOJE',
+    COUNTER_INITIAL_RANGE: [240, 260] as const,
+    FOOTER_LINE: 'VOCÊ NO CENTRO. DEZ AGENTES EM PARALELO TRABALHANDO PRA VOCÊ.',
+    SQUADS: [
+      { handle: '@pesquisa',  tasks: ['mapeando concorrentes', 'coletando benchmarks', 'extraindo reviews de produto', 'analisando ICPs'] },
+      { handle: '@copy',      tasks: ['escrevendo headline', 'afinando CTA', 'variante A/B da página', 'sequência de e-mails'] },
+      { handle: '@dev',       tasks: ['gerando dashboard', 'criando checkout', 'integrando webhook', 'deploy em staging'] },
+      { handle: '@design',    tasks: ['refinando hero', 'ajustando grid mobile', 'exportando assets', 'OG image nova'] },
+      { handle: '@analytics', tasks: ['validando eventos GA4', 'checando dedup Meta', 'funil de conversão', 'painel semanal'] },
+      { handle: '@conteudo',  tasks: ['roteiro de YouTube', 'post do Instagram', 'script de short', 'editorial da newsletter'] },
+      { handle: '@trafego',   tasks: ['criativos Meta Ads', 'teste de públicos', 'escala de campanha', 'UTM de lote'] },
+      { handle: '@audio',     tasks: ['voice clone update', 'narração do VSL', 'efeito de abertura', 'áudio digest'] },
+      { handle: '@vendas',    tasks: ['follow-up WhatsApp', 'agendamento de call', 'proposta personalizada', 'segmentação de leads'] },
+      { handle: '@cs',        tasks: ['resposta de ticket', 'onboarding ativo', 'NPS trimestral', 'escalada pra time'] },
+    ],
+  },
 } as const;

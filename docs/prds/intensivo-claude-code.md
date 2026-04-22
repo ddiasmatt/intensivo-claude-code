@@ -33,7 +33,7 @@ Fixa pela skill. Não alterar sem subir para `skill-architect`.
 
 - **Framework:** Astro 4 (output estático)
 - **UI reativa:** React 18 via `@astrojs/react` (islands)
-- **Estilo:** Tailwind CSS 4
+- **Estilo:** Tailwind CSS 4 via `@tailwindcss/vite` (plugin Vite oficial do v4). **Não usar `@astrojs/tailwind`** — a integration está presa no v3.x e não recebeu update para v4. Config de design tokens vive em `src/styles/global.css` dentro de `@theme`, não em `tailwind.config.mjs`.
 - **Animação de entrada e hero:** GSAP 3
 - **Microinteração em componentes React:** `motion` v12 (proibido `framer-motion`)
 - **Fontes:** Definidas na seção 3 abaixo. Injetadas via `<link>` Google Fonts com `display=swap` e `preconnect`.
@@ -56,7 +56,7 @@ Fixa pela skill. Não alterar sem subir para `skill-architect`.
 
 `editorial/magazine` em tema **light com acento quente**. Combinado com traço `brutalist/raw` controlado (réguas 1px, cortes secos, zero sombra sintética).
 
-### 3.3 Tokens da Fase 0 (fonte da verdade para `tailwind.config.mjs`)
+### 3.3 Tokens da Fase 0 (fonte da verdade para `@theme` em `src/styles/global.css`)
 
 | Categoria | Token | Valor | Nota |
 |---|---|---|---|
@@ -346,58 +346,64 @@ Três tipos obrigatórios nesta landing:
   - `organizer: Grupo VUK`
   - `offers: price 27.00, priceCurrency BRL, availability InStock, validFrom 2026-04-22, url = Sendflow`
 
-### 5.7 Tokens Tailwind (tradução da Fase 0)
+### 5.7 Tokens Tailwind v4 (tradução da Fase 0)
 
-```js
-// site/tailwind.config.mjs — extract
-export default {
-  darkMode: "class",
-  theme: {
-    extend: {
-      fontFamily: {
-        display: ['Fraunces', 'ui-serif', 'serif'],
-        sans: ['"Inter Tight"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
-      },
-      colors: {
-        page: '#FBFAF7',
-        surface: '#F3F1EC',
-        elevated: '#FFFFFF',
-        rule: '#D9D4CB',
-        accent: {
-          DEFAULT: '#E4572E',
-          hover: '#C84521',
-          deep: '#A63A1F',
-        },
-        ink: {
-          primary: '#0B0B0D',
-          secondary: '#4A4744',
-          muted: '#8A8580',
-        },
-      },
-      keyframes: {
-        'mask-reveal': {
-          '0%':   { 'clip-path': 'inset(0 100% 0 0)' },
-          '100%': { 'clip-path': 'inset(0 0 0 0)' },
-        },
-        'live-pulse': {
-          '0%, 100%': { opacity: '1' },
-          '50%':       { opacity: '0.4' },
-        },
-        'marquee-left':  { '0%': { transform: 'translateX(0)' },       '100%': { transform: 'translateX(-50%)' } },
-        'marquee-right': { '0%': { transform: 'translateX(-50%)' },    '100%': { transform: 'translateX(0)' }    },
-      },
-      animation: {
-        'mask-reveal':   'mask-reveal 0.8s cubic-bezier(0.77, 0, 0.175, 1) both',
-        'live-pulse':    'live-pulse 1.6s ease-in-out infinite',
-        'marquee-left':  'marquee-left 55s linear infinite',
-        'marquee-right': 'marquee-right 55s linear infinite',
-      },
-    },
-  },
-  plugins: [],
-};
+No Tailwind v4 os tokens vivem dentro de `@theme` no CSS. Nome do CSS var vira nome da classe: `--color-page` → `bg-page`/`text-page`, `--font-display` → `font-display`, `--animate-live-pulse` → `animate-live-pulse`. **Não existe mais `tailwind.config.mjs`.**
+
+```css
+/* site/src/styles/global.css — extract */
+@import "tailwindcss";
+
+@theme {
+  --color-page: #FBFAF7;
+  --color-surface: #F3F1EC;
+  --color-elevated: #FFFFFF;
+  --color-rule: #D9D4CB;
+
+  --color-accent: #E4572E;
+  --color-accent-hover: #C84521;
+  --color-accent-deep: #A63A1F;
+
+  --color-ink-primary: #0B0B0D;
+  --color-ink-secondary: #4A4744;
+  --color-ink-muted: #8A8580;
+
+  --font-display: "Fraunces", ui-serif, serif;
+  --font-sans: "Inter Tight", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --animate-mask-reveal: mask-reveal 0.8s cubic-bezier(0.77, 0, 0.175, 1) both;
+  --animate-live-pulse: live-pulse 1.6s ease-in-out infinite;
+  --animate-marquee-left: marquee-left 55s linear infinite;
+  --animate-marquee-right: marquee-right 55s linear infinite;
+
+  @keyframes mask-reveal {
+    0%   { clip-path: inset(0 100% 0 0); }
+    100% { clip-path: inset(0 0 0 0); }
+  }
+  @keyframes live-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.4; }
+  }
+  @keyframes marquee-left {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  @keyframes marquee-right {
+    0%   { transform: translateX(-50%); }
+    100% { transform: translateX(0); }
+  }
+}
 ```
+
+Mapeamento v3 → v4 que importa pro projeto:
+
+- `colors.accent.DEFAULT` / `.hover` / `.deep` vira `--color-accent` / `--color-accent-hover` / `--color-accent-deep`. Classes `bg-accent`, `bg-accent-hover`, `bg-accent-deep` continuam funcionando iguais.
+- `colors.ink.primary` vira `--color-ink-primary`. Classe `text-ink-primary` continua igual.
+- `theme('colors.ink.primary')` dentro de CSS vira `var(--color-ink-primary)`.
+- `fontFamily.sans` vira `--font-sans`. `font-sans` continua igual.
+- `keyframes` + `animation` viram `@keyframes` dentro de `@theme` + `--animate-<nome>`. Classes `animate-live-pulse`, `animate-marquee-left`, etc. continuam iguais.
+- Não existe mais `darkMode: "class"` — v4 usa variant `dark:` via CSS (`@variant dark (&:where(.dark, .dark *))`). Landing é só light, então ignorar.
 
 `bg-[#hex]` e `text-[#hex]` inline **são bug de code review**. Reprovar PR.
 
@@ -432,7 +438,7 @@ Componentes **não** são importados. A refatoração visual é total.
 {
   "dependencies": {
     "@astrojs/react": "^3",
-    "@astrojs/tailwind": "^5",
+    "@tailwindcss/vite": "^4",
     "astro": "^4",
     "motion": "^12",
     "gsap": "^3",
@@ -450,10 +456,25 @@ Componentes **não** são importados. A refatoração visual é total.
 }
 ```
 
+`site/astro.config.mjs`:
+
+```js
+import { defineConfig } from 'astro/config';
+import react from '@astrojs/react';
+import tailwindcss from '@tailwindcss/vite';
+
+export default defineConfig({
+  integrations: [react()],
+  vite: { plugins: [tailwindcss()] },
+  output: 'static',
+});
+```
+
 Notas:
-- **Tailwind 4** (não 3.4 como o template antigo sugere). Projeto é novo, stack do CLAUDE.md global manda v4.
-- **Removido:** `class-variance-authority` (não precisamos, variantes simples com `clsx` bastam); `tailwindcss-animate` (temos nossas keyframes).
-- **Adicionado via justificativa:** nada além do template mínimo.
+- **Tailwind v4 via `@tailwindcss/vite`.** O pacote `@astrojs/tailwind` é v3-only e **não será atualizado**; no v4 o Tailwind virou plugin Vite nativo. Não tem config JS — tudo em CSS via `@theme`.
+- **Não existe `tailwind.config.mjs`** no projeto. Se alguém criar um, rejeitar em code review.
+- **Removido:** `@astrojs/tailwind` (incompatível com v4), `class-variance-authority` (`clsx` basta), `tailwindcss-animate` (keyframes próprias via `@theme`).
+- **Adicionado via justificativa:** `@tailwindcss/vite` (obrigatório no v4 em Astro).
 
 ---
 
