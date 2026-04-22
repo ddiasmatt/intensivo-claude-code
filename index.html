@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#FAF9F7" />
+
+    <!-- Primary Meta Tags -->
+    <title>Intensivo Claude Code — Produza por 10 pessoas em 1 sabado | Grupo VUK</title>
+    <meta name="title" content="Intensivo Claude Code — Produza por 10 pessoas em 1 sabado" />
+    <meta name="description" content="Evento ao vivo sabado 16/05 no Zoom. Um dia inteiro montando o Sistema 10x com Claude Code. Preco travado R$27 no grupo Meteorico ate 26/04." />
+    <meta name="keywords" content="claude code, intensivo, sistema 10x, ia para agencias, mateus dias, grupo vuk, chatfunnel" />
+    <meta name="author" content="Grupo VUK" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://intensivo.grupovuk.com.br/" />
+
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://intensivo.grupovuk.com.br/" />
+    <meta property="og:title" content="Intensivo Claude Code — Produza por 10 pessoas em 1 sabado" />
+    <meta property="og:description" content="Evento ao vivo 16/05. O Sistema 10x com Claude Code. R$27 no grupo Meteorico." />
+    <meta property="og:image" content="https://intensivo.grupovuk.com.br/og-image.png" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:site_name" content="Intensivo Claude Code" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://intensivo.grupovuk.com.br/" />
+    <meta name="twitter:title" content="Intensivo Claude Code — Produza por 10 pessoas em 1 sabado" />
+    <meta name="twitter:description" content="Evento ao vivo 16/05. O Sistema 10x com Claude Code." />
+    <meta name="twitter:image" content="https://intensivo.grupovuk.com.br/og-image.png" />
+
+    <!-- Fonts: Figtree + JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+
+    <!-- Schema.org Event -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Event",
+      "name": "Intensivo Claude Code",
+      "startDate": "2026-05-16T09:00:00-03:00",
+      "endDate": "2026-05-16T16:00:00-03:00",
+      "eventAttendanceMode": "https://schema.org/OnlineEventAttendanceMode",
+      "eventStatus": "https://schema.org/EventScheduled",
+      "location": { "@type": "VirtualLocation", "url": "https://zoom.us" },
+      "description": "Evento ao vivo de 1 dia. Monte o Sistema 10x com Claude Code.",
+      "organizer": { "@type": "Organization", "name": "Grupo VUK", "url": "https://grupovuk.com.br" },
+      "offers": {
+        "@type": "Offer",
+        "priceCurrency": "BRL",
+        "price": "27",
+        "availability": "https://schema.org/InStock",
+        "validFrom": "2026-04-20"
+      }
+    }
+    </script>
+
+    <!-- GA4 (substituir pelo ID real antes de subir) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7CJMYD129G"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-7CJMYD129G');
+    </script>
+
+    <!-- Meta Pixel -->
+    <script>
+      function generateEventId(prefix) {
+        return prefix + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      }
+      function getExternalId() {
+        var id = localStorage.getItem('_meta_extid');
+        if (!id) {
+          id = 'ext_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+          localStorage.setItem('_meta_extid', id);
+        }
+        return id;
+      }
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+
+      fbq('init', '310399388108164', { external_id: getExternalId() });
+      fbq('track', 'PageView', {}, { eventID: generateEventId('pv') });
+    </script>
+  </head>
+
+  <body>
+    <noscript>
+      <img height="1" width="1" style="display:none"
+           src="https://www.facebook.com/tr?id=310399388108164&ev=PageView&noscript=1"/>
+    </noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
