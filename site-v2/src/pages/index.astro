@@ -12,8 +12,44 @@ import Autoridade from '../components/sections/Autoridade.astro';
 import FinalCTA from '../components/sections/FinalCTA.astro';
 import FAQ from '../components/sections/FAQ.astro';
 import Footer from '../components/Footer.astro';
+import { sendCapiEvent } from '../lib/capi';
+
+export const prerender = false;
+
+// event_id compartilhado entre Pixel (browser) e CAPI (servidor) pra dedup 48h.
+const pageViewEventId = crypto.randomUUID();
+
+const pixelId = import.meta.env.META_PIXEL_ID;
+const accessToken = import.meta.env.META_CAPI_ACCESS_TOKEN;
+const testCode = import.meta.env.META_CAPI_TEST_EVENT_CODE;
+
+if (pixelId && accessToken) {
+  const forwardedFor = Astro.request.headers.get('x-forwarded-for');
+  const clientIp = forwardedFor?.split(',')[0]?.trim() ?? Astro.clientAddress;
+  const clientUa = Astro.request.headers.get('user-agent') ?? undefined;
+  const cookieHeader = Astro.request.headers.get('cookie') ?? '';
+  const fbp = cookieHeader.match(/(?:^|;\s*)_fbp=([^;]+)/)?.[1];
+  const fbc = cookieHeader.match(/(?:^|;\s*)_fbc=([^;]+)/)?.[1];
+
+  try {
+    await sendCapiEvent(
+      {
+        eventId: pageViewEventId,
+        eventName: 'PageView',
+        eventSourceUrl: Astro.url.href,
+        clientIp,
+        clientUa,
+        fbp,
+        fbc,
+      },
+      { pixelId, accessToken, testEventCode: testCode || undefined }
+    );
+  } catch (err) {
+    console.error('CAPI PageView failed:', (err as Error).message);
+  }
+}
 ---
-<Base>
+<Base eventId={pageViewEventId}>
   <TopBar />
   <main>
     <Hero />
