@@ -157,7 +157,7 @@ Cada pasta de peça tem:
 
 ## Regras deste projeto
 
-- Toda documentação em `docs/` (prds, plans, stories, research, copy, decisions, logs)
+- Toda documentação em `docs/` (prds, plans, stories, research, copy, decisions). Logs ficam em `logs/` na raiz.
 - Obsidian-first: frontmatter obrigatório em todo `.md`, wikilinks em vez de paths relativos
 - Logs numerados em `logs/<NNN>-<slug>.md` (3 dígitos zero-padded, sequenciais, sempre ler a contagem atual antes de criar novo). Ver regra global em `~/.claude/CLAUDE.md`.
 - Conventional Commits: `tipo(escopo): descrição`
