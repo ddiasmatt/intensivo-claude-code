@@ -22,9 +22,9 @@ export interface CapiInput {
   eventId: string;
   eventName: CapiEventName;
   eventSourceUrl: string;
-  email?: string;
-  phone?: string;
-  name?: string;
+  email: string;
+  phone: string;
+  name: string;
   country?: string;
   fbp?: string;
   fbc?: string;
@@ -41,25 +41,18 @@ export interface CapiConfig {
 }
 
 export async function sendCapiEvent(input: CapiInput, cfg: CapiConfig): Promise<unknown> {
-  const userData: Record<string, string[] | string> = {};
+  const { fn, ln } = splitFullName(input.name);
+  const normalizedEmail = normalizeEmail(input.email);
 
-  if (input.email) {
-    const normalizedEmail = normalizeEmail(input.email);
-    userData.em = [await sha256(normalizedEmail)];
-    userData.external_id = [await sha256(normalizedEmail)];
-  }
-  if (input.phone) {
-    userData.ph = [await sha256(normalizePhone(input.phone))];
-  }
-  if (input.name) {
-    const { fn, ln } = splitFullName(input.name);
-    userData.fn = [await sha256(normalizeName(fn))];
-    if (ln) userData.ln = [await sha256(normalizeName(ln))];
-  }
-  if (input.email || input.phone || input.name) {
-    userData.country = [await sha256(normalizeCountry(input.country ?? 'br'))];
-  }
+  const userData: Record<string, string[] | string> = {
+    em: [await sha256(normalizedEmail)],
+    ph: [await sha256(normalizePhone(input.phone))],
+    fn: [await sha256(normalizeName(fn))],
+    country: [await sha256(normalizeCountry(input.country ?? 'br'))],
+    external_id: [await sha256(normalizedEmail)],
+  };
 
+  if (ln) userData.ln = [await sha256(normalizeName(ln))];
   if (input.fbp) userData.fbp = input.fbp;
   if (input.fbc) userData.fbc = input.fbc;
   if (input.clientIp) userData.client_ip_address = input.clientIp;
