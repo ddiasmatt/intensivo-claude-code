@@ -6,8 +6,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { PhoneInput } from 'react-international-phone';
-import 'react-international-phone/style.css';
 import { CONFIG } from '../../config';
 import { captureUTMs, getStoredUTMs, buildUrlWithUTMs } from '../../lib/utm';
 import { getFbp, getFbc } from '../../lib/fb-cookies';
@@ -19,6 +17,13 @@ type Status = 'idle' | 'loading' | 'success' | 'error';
 
 // Regex email suficiente para validacao client-side. Validacao final no backend.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function maskPhoneBR(raw: string): string {
+  const d = raw.replace(/\D/g, '').slice(0, 11);
+  if (d.length <= 2) return d.length ? `(${d}` : '';
+  if (d.length <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+}
 
 export default function CaptureModal() {
   const [open, setOpen] = useState(false);
@@ -126,8 +131,8 @@ export default function CaptureModal() {
     if (!name.trim()) e.name = 'Preencha seu nome.';
     if (!EMAIL_RE.test(email.trim())) e.email = 'Email invalido.';
     const phoneDigits = phone.replace(/\D/g, '');
-    if (phoneDigits.length < 8 || phoneDigits.length > 15) {
-      e.phone = 'Telefone invalido. Inclua codigo do pais.';
+    if (phoneDigits.length !== 11) {
+      e.phone = 'Telefone invalido. Inclua DDD + celular com 9.';
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -150,10 +155,12 @@ export default function CaptureModal() {
     const eventID = `lead_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
     const utms = getStoredUTMs();
 
+    const phoneE164 = `55${phone.replace(/\D/g, '')}`;
+
     const payload = {
       name: name.trim(),
       email: email.trim(),
-      phone: phone, // ja vem em E.164 do PhoneInput (ex: +5511999999999)
+      phone: phoneE164,
       event_id: eventID,
       ...utms,
     };
@@ -382,29 +389,19 @@ export default function CaptureModal() {
                   >
                     Telefone (WhatsApp)
                   </label>
-                  {/*
-                    Divergencia intencional do padrao canonico ~/.claude/skills/landing-page-prd/references/modal-pattern.md
-                    linhas 115-119 (mask BR-only). Publico VUK inclui brasileiros no exterior + leads LATAM futuros.
-                    PhoneInput retorna valor em E.164 (ex: +5511999999999) — shape esperado pelo webhook VUKer.
-                  */}
-                  <PhoneInput
-                    defaultCountry="br"
+                  <input
+                    id="capture-phone"
+                    type="tel"
+                    name="phone"
+                    inputMode="numeric"
+                    autoComplete="tel-national"
                     value={phone}
-                    onChange={(newPhone) => setPhone(newPhone)}
-                    inputProps={{
-                      id: 'capture-phone',
-                      name: 'phone',
-                      autoComplete: 'tel',
-                      'aria-invalid': !!errors.phone,
-                      'aria-describedby': errors.phone ? 'capture-phone-error' : undefined,
-                    }}
-                    inputClassName="w-full border border-rule bg-page px-3 py-3 font-sans text-base text-ink-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent"
-                    countrySelectorStyleProps={{
-                      buttonClassName: 'border border-rule bg-page px-3 py-3',
-                      dropdownStyleProps: {
-                        className: 'border border-rule bg-elevated text-ink-primary font-sans text-sm',
-                      },
-                    }}
+                    onChange={(e) => setPhone(maskPhoneBR(e.target.value))}
+                    aria-invalid={!!errors.phone}
+                    aria-describedby={errors.phone ? 'capture-phone-error' : undefined}
+                    className="w-full border border-rule bg-page px-3 py-3 font-sans text-base text-ink-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+                    placeholder="(11) 91234-5678"
+                    maxLength={16}
                   />
                   {errors.phone && (
                     <p
