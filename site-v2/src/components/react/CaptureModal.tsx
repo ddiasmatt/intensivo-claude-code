@@ -80,7 +80,17 @@ export default function CaptureModal() {
     }
   }, []);
 
+  // Ref espelha o requestClose atual. Deps diretas no useEffect abaixo causariam
+  // re-run a cada keystroke (porque requestClose depende de name/email/phone/status),
+  // o que rechamaria o RAF de focus e jogaria o foco de volta no campo Nome.
+  const requestCloseRef = useRef(requestClose);
+  useEffect(() => {
+    requestCloseRef.current = requestClose;
+  }, [requestClose]);
+
   // Side-effects enquanto aberto: lock scroll do body, focus inicial, keyboard handlers.
+  // Dep array contem apenas `open` — trapFocus e estavel (useCallback []), requestClose
+  // e lido via ref. Roda so na transicao aberto/fechado, nao em cada digitacao.
   useEffect(() => {
     if (!open) return;
 
@@ -96,7 +106,7 @@ export default function CaptureModal() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        requestClose();
+        requestCloseRef.current();
       } else if (e.key === 'Tab') {
         trapFocus(e);
       }
@@ -108,7 +118,8 @@ export default function CaptureModal() {
       document.body.style.overflow = prevOverflow;
       document.removeEventListener('keydown', onKey);
     };
-  }, [open, requestClose, trapFocus]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   function validate(): boolean {
     const e: Record<string, string> = {};
