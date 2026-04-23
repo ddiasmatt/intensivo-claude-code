@@ -16,10 +16,5 @@
         { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" }
       ]
     }
-  ],
-  "rewrites": [
-    { "source": "/lpv2", "destination": "/" },
-    { "source": "/lpv2/", "destination": "/" },
-    { "source": "/lpv2/:path*", "destination": "/:path*" }
   ]
 }

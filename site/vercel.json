@@ -17,9 +17,9 @@
       ]
     }
   ],
-  "rewrites": [
-    { "source": "/lpv2", "destination": "https://intensivo-claude-code-v2.vercel.app/lpv2" },
-    { "source": "/lpv2/", "destination": "https://intensivo-claude-code-v2.vercel.app/lpv2/" },
-    { "source": "/lpv2/:path*", "destination": "https://intensivo-claude-code-v2.vercel.app/lpv2/:path*" }
+  "redirects": [
+    { "source": "/lpv2", "destination": "https://icc-v2.thesociety.com.br/", "statusCode": 301 },
+    { "source": "/lpv2/", "destination": "https://icc-v2.thesociety.com.br/", "statusCode": 301 },
+    { "source": "/lpv2/:path*", "destination": "https://icc-v2.thesociety.com.br/:path*", "statusCode": 301 }
   ]
 }
