@@ -10,6 +10,10 @@ import { PhoneInput } from 'react-international-phone';
 import 'react-international-phone/style.css';
 import { CONFIG } from '../../config';
 import { captureUTMs, getStoredUTMs, buildUrlWithUTMs } from '../../lib/utm';
+import { getFbp, getFbc } from '../../lib/fb-cookies';
+import { normalizeEmail, normalizePhone, normalizeName, splitFullName } from '../../lib/hash';
+
+const PIXEL_ID = import.meta.env.PUBLIC_META_PIXEL_ID ?? '';
 
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
@@ -156,11 +160,48 @@ export default function CaptureModal() {
       });
     }
 
-    // Tracking com mesmo eventID (dedup Meta CAPI + GA4 measurement protocol).
-    // @ts-expect-error fbq injetado pelo Pixel em Base.astro (opcional)
-    window.fbq?.('track', 'Lead', {}, { eventID });
+    // Advanced Matching no Pixel: re-init com dados normalizados ANTES do track.
+    // Meta Pixel lib hasheia client-side usando mesmo algoritmo do CAPI (dedup OK).
+    const { fn, ln } = splitFullName(payload.name);
+    const advancedMatching: Record<string, string> = {
+      em: normalizeEmail(payload.email),
+      ph: normalizePhone(payload.phone),
+      fn: normalizeName(fn),
+      country: 'br',
+      external_id: normalizeEmail(payload.email),
+    };
+    if (ln) advancedMatching.ln = normalizeName(ln);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const fbq = (window as any).fbq as ((...args: unknown[]) => void) | undefined;
+    if (fbq && PIXEL_ID) {
+      fbq('init', PIXEL_ID, advancedMatching);
+      fbq('track', 'Lead', {}, { eventID });
+    }
     // @ts-expect-error gtag injetado pelo GA4 em Base.astro
     window.gtag?.('event', 'generate_lead', { event_id: eventID });
+
+    // Conversions API: POST pro /api/capi (serverless). Fire-and-forget, mesmo event_id
+    // que o Pixel acima → Meta deduplica em 48h. Inclui fbp/fbc/UTMs pra EMQ.
+    const fbp = getFbp();
+    const fbc = getFbc();
+    const capiPayload: Record<string, unknown> = {
+      name: payload.name,
+      email: payload.email,
+      phone: payload.phone,
+      event_id: eventID,
+      event_source_url: window.location.href,
+      custom_data: { lead_source: 'landing_intensivo', ...utms },
+    };
+    if (fbp) capiPayload.fbp = fbp;
+    if (fbc) capiPayload.fbc = fbc;
+    fetch('/api/capi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(capiPayload),
+    }).catch(() => {
+      // Silencioso. Falha de CAPI nao pode travar o lead.
+    });
 
     // Redirect com UTMs propagados. Nao aguarda.
     if (CONFIG.REDIRECT_URL) {
