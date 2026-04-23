@@ -8,11 +8,13 @@ import CaptureModal from '../components/react/CaptureModal';
 interface Props {
   title?: string;
   description?: string;
+  eventId?: string;
 }
 
 const {
   title = 'Intensivo Claude Code · 16/05 ao vivo no Zoom',
   description = 'Sabado intensivo com Mateus Dias. Construa 10 agentes de IA sem programar. Grupo VIP com oferta unica R$ 27.',
+  eventId,
 } = Astro.props;
 
 const GA_ID = import.meta.env.PUBLIC_GA_ID ?? '';
@@ -74,7 +76,7 @@ const jsonLd = buildStructuredData({
     <!-- Meta Pixel condicional -->
     {META_PIXEL && (
       <>
-        <script is:inline set:html={`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${META_PIXEL}');fbq('track','PageView');`} />
+        <script is:inline set:html={`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${META_PIXEL}');fbq('track','PageView'${eventId ? `, {}, {eventID: '${eventId}'}` : ''});`} />
         <noscript>
           <img height="1" width="1" style="display:none" alt="" src={`https://www.facebook.com/tr?id=${META_PIXEL}&ev=PageView&noscript=1`} />
         </noscript>
