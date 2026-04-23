@@ -159,7 +159,7 @@ Cada pasta de peça tem:
 
 - Toda documentação em `docs/` (prds, plans, stories, research, copy, decisions, logs)
 - Obsidian-first: frontmatter obrigatório em todo `.md`, wikilinks em vez de paths relativos
-- Logs diários por squad em `docs/logs/squad-<nome>/YYYY-MM-DD.md`
+- Logs numerados em `logs/<NNN>-<slug>.md` (3 dígitos zero-padded, sequenciais, sempre ler a contagem atual antes de criar novo). Ver regra global em `~/.claude/CLAUDE.md`.
 - Conventional Commits: `tipo(escopo): descrição`
 - Nunca commitar na main diretamente. Crie feature branch.
 - Consumir blueprints/SOPs do vault Obsidian via path absoluto, não copiar conteúdo.
