@@ -50,42 +50,36 @@ Branch: `feat/icc-v2-subdomain`. Ainda não mergeada.
 
 ## Passos restantes (Fase 2 a 5)
 
-### Fase 2 — Pré-requisitos MCP
+### Fase 2 — Pré-requisitos MCP ✅
 
-Antes de executar, o usuário precisa conectar:
+- [x] **Cloudflare MCP** — conectado em 2026-04-23
+- [x] **Vercel MCP** — conectado em 2026-04-23 (team VUK `vuk-ai-society`)
 
-- [ ] **Cloudflare MCP** — autenticado, com acesso à zona `thesociety.com.br`
-- [ ] **Vercel MCP** — autenticado, com acesso ao team/org que tem o projeto `intensivo-claude-code-v2`
+### Fase 3 — Configuração de DNS e domínio ✅
 
-> [!warning] Sem os MCPs conectados, a Fase 3 não roda automaticamente. Alternativa: usuário cria CNAME + adiciona domínio no dashboard e me avisa.
+**3.1. CNAME criado na Cloudflare** (2026-04-23 20:03 BRT)
+- Zona: `thesociety.com.br` (id `c06b39c2d80ba0eed06498c0586d28b4`)
+- Record id: `037f6103b232c4c5795138999deb11e6`
+- Nome: `icc-v2` → Target: `cname.vercel-dns.com` (DNS only, TTL Auto)
+- Propagação confirmada em `@1.1.1.1` e `@8.8.8.8`
 
-### Fase 3 — Configuração de DNS e domínio (via MCP)
+**3.2. Domínio adicionado no projeto Vercel v2** (2026-04-23 20:06 BRT)
+- Projeto: `intensivo-claude-code-v2` (prj_e4e5WdS8ifGzmIcevjo5XgBhsndy)
+- Via `vercel domains add icc-v2.thesociety.com.br --scope=vuk-ai-society`
+- SSL ativo: `curl -I` retornou `HTTP/2 200` + `strict-transport-security: max-age=63072000; includeSubDomains; preload`
+- CSP servida já é a do `site-v2/vercel.json` (vercel.live, facebook.com, googletagmanager.com, sndflw.com)
 
-**3.1. Criar CNAME na Cloudflare**
-- Zona: `thesociety.com.br`
-- Tipo: `CNAME`
-- Nome: `icc-v2`
-- Target: `cname.vercel-dns.com`
-- Proxy: **DNS only** (desligado, obrigatório pro SSL Vercel validar)
-- TTL: Auto
+**3.3. Env vars confirmadas em Production**
+- ✅ `META_CAPI_ACCESS_TOKEN` (encrypted)
+- ✅ `META_PIXEL_ID` (encrypted)
+- ✅ `PUBLIC_META_PIXEL_ID` (310399388108164)
+- ✅ `PUBLIC_GA_ID` (G-7CJMYD129G)
+- ✅ `PUBLIC_REDIRECT_URL` (encrypted)
+- ✅ `PUBLIC_WEBHOOK_URLS` (encrypted)
+- `META_CAPI_TEST_EVENT_CODE` ausente — opcional, só pra staging/debug
 
-**3.2. Adicionar domínio na Vercel**
-- Projeto: `intensivo-claude-code-v2`
-- Domain: `icc-v2.thesociety.com.br`
-- Vercel vai validar CNAME e emitir certificado SSL automaticamente (leva 2-5 min)
-
-**3.3. Confirmar env vars em Production no projeto v2**
-
-Variáveis que o CAPI endpoint precisa:
-- `META_PIXEL_ID`
-- `META_CAPI_ACCESS_TOKEN`
-- `META_CAPI_TEST_EVENT_CODE` (opcional, só pra testes)
-
-E as públicas do pixel:
-- `PUBLIC_META_PIXEL_ID`
-- `PUBLIC_GA_ID`
-
-Se já estão setadas (deve estar — já rodava via rewrite), não mexer. Só verificar.
+> [!warning] Deploy atual ainda é pré-merge
+> `https://icc-v2.thesociety.com.br/` responde 200 mas serve o bundle antigo (canonical aponta pra `icc.thesociety.com.br/lpv2/`, manifest em `/lpv2/...`). Merge da branch na main é o que promove o código novo sem base path.
 
 ### Fase 4 — Deploy e validação
 
