@@ -175,7 +175,7 @@ export default function CaptureModal() {
       {open && (
         <motion.div
           key="capture-modal-backdrop"
-          className="fixed inset-0 z-50 flex items-end justify-center bg-ink-primary/60 p-0 sm:items-center sm:p-6"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink-primary/60 p-4 sm:p-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -190,7 +190,7 @@ export default function CaptureModal() {
             aria-modal="true"
             aria-labelledby="capture-modal-title"
             aria-describedby="capture-modal-subtitle"
-            className="relative w-full border border-rule bg-elevated p-8 sm:max-w-md sm:p-10"
+            className="relative w-full max-w-md border border-rule bg-elevated p-6 sm:p-10"
             initial={{ y: 40, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 20, opacity: 0 }}
