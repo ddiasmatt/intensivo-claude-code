@@ -71,10 +71,27 @@ const jsonLd = buildStructuredData({
       </>
     )}
 
-    <!-- Meta Pixel condicional -->
+    <!-- Meta Pixel + CAPI PageView com dedup via event_id compartilhado -->
     {META_PIXEL && (
       <>
-        <script is:inline set:html={`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${META_PIXEL}');fbq('track','PageView');`} />
+        <script
+          is:inline
+          define:vars={{ META_PIXEL, CAPI_PAGEVIEW_URL: `${import.meta.env.BASE_URL}api/capi-pageview` }}
+          set:html={`
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+const eventId = (window.crypto && typeof window.crypto.randomUUID === 'function')
+  ? window.crypto.randomUUID()
+  : 'pv-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+fbq('init', META_PIXEL);
+fbq('track', 'PageView', {}, { eventID: eventId });
+fetch(CAPI_PAGEVIEW_URL, {
+  method: 'POST',
+  keepalive: true,
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ event_id: eventId, event_source_url: location.href })
+}).catch(() => {});
+`}
+        />
         <noscript>
           <img height="1" width="1" style="display:none" alt="" src={`https://www.facebook.com/tr?id=${META_PIXEL}&ev=PageView&noscript=1`} />
         </noscript>
