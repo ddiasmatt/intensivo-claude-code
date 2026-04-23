@@ -147,65 +147,95 @@ export default function CaptureModal() {
       ...utms,
     };
 
-    // Fire-and-forget. Redirect nao aguarda response dos webhooks.
-    if (CONFIG.WEBHOOK_URLS.length > 0) {
-      CONFIG.WEBHOOK_URLS.forEach((url: string) => {
-        fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        }).catch(() => {
-          // Silencioso por design. Falha de webhook nao pode travar o lead.
+    // Fire-and-forget pra webhook VUKer (lead de verdade) — tracking (Pixel/GA/CAPI)
+    // e redirect rodam em try independentes. Qualquer excecao sincrona nao pode
+    // deixar o botao travado em "Enviando...".
+    try {
+      if (CONFIG.WEBHOOK_URLS.length > 0) {
+        CONFIG.WEBHOOK_URLS.forEach((url: string) => {
+          fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          }).catch((err) => {
+            console.error('[capture] webhook failed:', err);
+          });
         });
+      } else {
+        console.warn('[capture] PUBLIC_WEBHOOK_URLS nao configurado no build — lead nao sera persistido');
+      }
+    } catch (err) {
+      console.error('[capture] webhook dispatch crashed:', err);
+    }
+
+    try {
+      const { fn, ln } = splitFullName(payload.name);
+      const advancedMatching: Record<string, string> = {
+        em: normalizeEmail(payload.email),
+        ph: normalizePhone(payload.phone),
+        fn: normalizeName(fn),
+        country: 'br',
+        external_id: normalizeEmail(payload.email),
+      };
+      if (ln) advancedMatching.ln = normalizeName(ln);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const fbq = (window as any).fbq as ((...args: unknown[]) => void) | undefined;
+      if (fbq && PIXEL_ID) {
+        fbq('init', PIXEL_ID, advancedMatching);
+        fbq('track', 'Lead', {}, { eventID });
+      }
+      // @ts-expect-error gtag injetado pelo GA4 em Base.astro
+      window.gtag?.('event', 'generate_lead', { event_id: eventID });
+    } catch (err) {
+      console.error('[capture] pixel/gtag failed:', err);
+    }
+
+    // CAPI server-side. Path prefixado com BASE_URL (Astro base = '/lpv2/').
+    // Fire-and-forget: 404/500 aqui nao pode travar o lead nem o redirect.
+    try {
+      const fbp = getFbp();
+      const fbc = getFbc();
+      const capiPayload: Record<string, unknown> = {
+        name: payload.name,
+        email: payload.email,
+        phone: payload.phone,
+        event_id: eventID,
+        event_source_url: window.location.href,
+        custom_data: { lead_source: 'landing_intensivo', ...utms },
+      };
+      if (fbp) capiPayload.fbp = fbp;
+      if (fbc) capiPayload.fbc = fbc;
+      const capiUrl = `${import.meta.env.BASE_URL}api/capi`.replace(/\/+/g, '/');
+      fetch(capiUrl, {
+        method: 'POST',
+        keepalive: true,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(capiPayload),
+      }).catch((err) => {
+        console.error('[capture] CAPI fetch failed:', err);
       });
+    } catch (err) {
+      console.error('[capture] CAPI dispatch crashed:', err);
     }
 
-    // Advanced Matching no Pixel: re-init com dados normalizados ANTES do track.
-    // Meta Pixel lib hasheia client-side usando mesmo algoritmo do CAPI (dedup OK).
-    const { fn, ln } = splitFullName(payload.name);
-    const advancedMatching: Record<string, string> = {
-      em: normalizeEmail(payload.email),
-      ph: normalizePhone(payload.phone),
-      fn: normalizeName(fn),
-      country: 'br',
-      external_id: normalizeEmail(payload.email),
-    };
-    if (ln) advancedMatching.ln = normalizeName(ln);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const fbq = (window as any).fbq as ((...args: unknown[]) => void) | undefined;
-    if (fbq && PIXEL_ID) {
-      fbq('init', PIXEL_ID, advancedMatching);
-      fbq('track', 'Lead', {}, { eventID });
-    }
-    // @ts-expect-error gtag injetado pelo GA4 em Base.astro
-    window.gtag?.('event', 'generate_lead', { event_id: eventID });
-
-    // Conversions API: POST pro /api/capi (serverless). Fire-and-forget, mesmo event_id
-    // que o Pixel acima → Meta deduplica em 48h. Inclui fbp/fbc/UTMs pra EMQ.
-    const fbp = getFbp();
-    const fbc = getFbc();
-    const capiPayload: Record<string, unknown> = {
-      name: payload.name,
-      email: payload.email,
-      phone: payload.phone,
-      event_id: eventID,
-      event_source_url: window.location.href,
-      custom_data: { lead_source: 'landing_intensivo', ...utms },
-    };
-    if (fbp) capiPayload.fbp = fbp;
-    if (fbc) capiPayload.fbc = fbc;
-    fetch('/api/capi', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(capiPayload),
-    }).catch(() => {
-      // Silencioso. Falha de CAPI nao pode travar o lead.
-    });
-
-    // Redirect com UTMs propagados. Nao aguarda.
+    // Redirect com UTMs propagados. Safety belt: se navigation nao acontecer
+    // (CSP block, URL invalida, etc), reverte status pra idle em 8s pro usuario
+    // poder tentar de novo em vez de ficar preso em "Enviando...".
     if (CONFIG.REDIRECT_URL) {
-      window.location.href = buildUrlWithUTMs(CONFIG.REDIRECT_URL, utms);
+      const redirectTo = buildUrlWithUTMs(CONFIG.REDIRECT_URL, utms);
+      window.setTimeout(() => {
+        if (document.visibilityState === 'visible') {
+          console.error('[capture] redirect did not happen within 8s. URL:', redirectTo);
+          setStatus('error');
+        }
+      }, 8000);
+      try {
+        window.location.assign(redirectTo);
+      } catch (err) {
+        console.error('[capture] window.location.assign crashed:', err);
+        setStatus('error');
+      }
       return;
     }
     setStatus('success');
