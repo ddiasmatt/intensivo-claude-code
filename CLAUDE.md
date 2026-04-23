@@ -138,6 +138,23 @@ Projeto do tipo `funil`. SOPs diretos:
 
 Consumir via path absoluto, não copiar.
 
+## Topologia multi-landing (padrão obrigatório)
+
+Cada peça de funil (captação, vendas, checkout, obrigado, evento) vive em **pasta própria** (`site/`, `site-v2/`, `site-vendas/`, ...) e é deployada como **projeto Vercel independente**, com **subdomínio próprio** em Cloudflare.
+
+- `site/` → `icc.thesociety.com.br` (landing v1 original, design dark)
+- `site-v2/` → `icc-v2.thesociety.com.br` (captação v2, design claro)
+- Próximas peças: `site-<slug>/` → `<slug>.thesociety.com.br`
+
+**NUNCA usar rewrite externo como fronting** pra servir outra peça sob o mesmo domínio. O rewrite externo quebra CSP (a do fronting prevalece sobre a da origem), proxy de POST tem pegadinhas, e a CSP duplica entre os dois `vercel.json` (drift garantido).
+
+Se precisar preservar URL velha depois de mover uma peça, use **redirect 301** pro subdomínio novo (padrão aplicado em `site/vercel.json` após a migração de `/lpv2/*` → `icc-v2.thesociety.com.br/*`).
+
+Cada pasta de peça tem:
+- `astro.config.mjs` com `site: 'https://<subdomínio>'` e **sem** `base:` (URLs limpas)
+- `vercel.json` com sua própria CSP e headers de segurança (fonte única de verdade por peça)
+- `.vercel/` apontando pro projeto Vercel próprio
+
 ## Regras deste projeto
 
 - Toda documentação em `docs/` (prds, plans, stories, research, copy, decisions, logs)

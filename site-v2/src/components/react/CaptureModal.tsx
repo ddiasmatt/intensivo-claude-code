@@ -191,8 +191,7 @@ export default function CaptureModal() {
       console.error('[capture] pixel/gtag failed:', err);
     }
 
-    // CAPI server-side. Path prefixado com BASE_URL (Astro base = '/lpv2/').
-    // Fire-and-forget: 404/500 aqui nao pode travar o lead nem o redirect.
+    // CAPI server-side. Fire-and-forget: 404/500 aqui nao pode travar o lead nem o redirect.
     try {
       const fbp = getFbp();
       const fbc = getFbc();

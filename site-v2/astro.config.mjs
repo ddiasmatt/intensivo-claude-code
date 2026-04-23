@@ -4,8 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import vercel from '@astrojs/vercel/serverless';
 
 export default defineConfig({
-  site: 'https://icc.thesociety.com.br',
-  base: '/lpv2/',
+  site: 'https://icc-v2.thesociety.com.br',
   integrations: [react()],
   vite: {
     plugins: [tailwindcss()],
