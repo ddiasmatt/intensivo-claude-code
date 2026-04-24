@@ -5,6 +5,12 @@ import { CONFIG } from '@/config';
 <footer class="relative border-t border-white/5 py-10">
   <div class="container-landing flex flex-col items-center gap-4 text-center text-xs text-ink-muted sm:flex-row sm:justify-between sm:text-left sm:text-sm">
     <p>{CONFIG.COPYRIGHT}</p>
-    <p class="font-mono uppercase tracking-wider text-accent-hover/70">Grupo VUK</p>
+    <nav aria-label="Links legais" class="flex flex-wrap items-center justify-center gap-4">
+      <a class="transition hover:text-accent-hover" href={CONFIG.PRIVACY_URL}>Privacidade</a>
+      <a class="transition hover:text-accent-hover" href={CONFIG.TERMS_URL}>Termos</a>
+      <a class="transition hover:text-accent-hover" href={`mailto:${CONFIG.CONTACT_EMAIL}`}>
+        {CONFIG.CONTACT_EMAIL}
+      </a>
+    </nav>
   </div>
 </footer>

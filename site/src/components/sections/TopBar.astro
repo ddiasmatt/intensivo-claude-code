@@ -2,11 +2,13 @@
 import { CONFIG } from '@/config';
 ---
 
-<button
-  type="button"
-  data-open-modal
-  class="w-full bg-accent-deep px-4 py-2.5 text-center text-xs font-semibold tracking-wide text-white transition-colors hover:bg-accent sm:text-sm"
-  aria-label="Abrir formulario de captura"
->
-  {CONFIG.TOP_BAR_TEXT}
-</button>
+<header role="banner">
+  <button
+    type="button"
+    data-open-modal
+    class="w-full bg-accent-deep px-4 py-2.5 text-center text-xs font-semibold tracking-wide text-white transition-colors hover:bg-accent sm:text-sm"
+    aria-label="Abrir formulario de captura"
+  >
+    {CONFIG.TOP_BAR_TEXT}
+  </button>
+</header>

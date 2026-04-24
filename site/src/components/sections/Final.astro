@@ -1,22 +1,10 @@
 ---
 import { CONFIG } from '@/config';
-import { SparklesCore } from '@/components/ui/sparkles';
 import { HoverBorderGradient } from '@/components/ui/hover-border-gradient';
 ---
 
 <section id="final" class="relative overflow-hidden py-24 md:py-32" data-gsap="reveal">
-  <div class="absolute inset-0">
-    <SparklesCore
-      client:visible
-      background="transparent"
-      minSize={0.6}
-      maxSize={1.6}
-      particleDensity={70}
-      particleColor="#F59E53"
-      speed={1}
-      className="h-full w-full"
-    />
-  </div>
+  <div class="dot-grid pointer-events-none absolute inset-0 opacity-40" aria-hidden="true"></div>
   <div
     class="pointer-events-none absolute left-1/2 top-1/2 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/12 blur-[120px]"
     aria-hidden="true"

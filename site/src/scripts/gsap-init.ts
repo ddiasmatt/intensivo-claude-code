@@ -2,7 +2,7 @@ import gsap from 'gsap';
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// Modal bridge — delegated click (sempre ativo)
+// Modal bridge: delegated click (sempre ativo)
 document.addEventListener('click', (e) => {
   const target = e.target as HTMLElement;
   const trigger = target.closest<HTMLElement>('[data-open-modal]');
@@ -13,7 +13,7 @@ document.addEventListener('click', (e) => {
 
 if (!reducedMotion) {
   requestAnimationFrame(() => {
-    // Hero entrance — stagger fade+rise no mount (Hero e 100% estatico, sem island conflitando)
+    // Hero entrance: stagger fade+rise no mount (Hero e 100% estatico, sem island conflitando)
     const heroTargets = [
       '[data-gsap="hero-badge"]',
       '[data-gsap="hero-wordmark"]',
@@ -31,7 +31,7 @@ if (!reducedMotion) {
       ease: 'power3.out',
     });
 
-    // Magnetic CTA — efeito de atração magnetica no mouse hover
+    // Magnetic CTA: efeito de atração magnetica no mouse hover
     document.querySelectorAll<HTMLElement>('[data-magnetic]').forEach((wrapper) => {
       const btn = wrapper.querySelector<HTMLElement>('button, a, astro-island');
       if (!btn) return;
