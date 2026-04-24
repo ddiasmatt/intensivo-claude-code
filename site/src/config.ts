@@ -1,11 +1,46 @@
-const WEBHOOK_URLS_ENV = import.meta.env.PUBLIC_WEBHOOK_URLS ?? "";
-const REDIRECT_URL_ENV = import.meta.env.PUBLIC_REDIRECT_URL ?? "";
+const SITE_URL = "https://intensivo.grupovuk.com.br/";
+const OG_IMAGE_URL = `${SITE_URL.replace(/\/$/, "")}/og-image.png`;
+const PRIVACY_URL = "https://grupovuk.com.br/politica-de-privacidade";
+const TERMS_URL = "https://grupovuk.com.br/termos-de-uso";
+const CONTACT_EMAIL = "contato@grupovuk.com.br";
+
+const DEFAULT_WEBHOOK_URLS: string[] = [
+  "https://api-sigma.vuker.com.br/api/webhooks/inbound/9d2cd781-a63f-4a3d-8aea-edd3413b652a",
+];
+const DEFAULT_REDIRECT_URL = "https://sndflw.com/i/trV5sqi3n9eSZD0U1Rlx";
+
+const WEBHOOK_URLS_ENV: string = import.meta.env.PUBLIC_WEBHOOK_URLS ?? "";
+const REDIRECT_URL_ENV: string = import.meta.env.PUBLIC_REDIRECT_URL ?? "";
+
+const WEBHOOK_URLS: string[] = WEBHOOK_URLS_ENV
+  ? WEBHOOK_URLS_ENV.split(",").map((url: string) => url.trim()).filter(Boolean)
+  : DEFAULT_WEBHOOK_URLS;
+const REDIRECT_URL: string = REDIRECT_URL_ENV || DEFAULT_REDIRECT_URL;
+
+if (!WEBHOOK_URLS_ENV) {
+  console.warn(
+    "[site] PUBLIC_WEBHOOK_URLS ausente no build. Usando fallback padrao de producao.",
+  );
+}
+
+if (!REDIRECT_URL_ENV) {
+  console.warn(
+    "[site] PUBLIC_REDIRECT_URL ausente no build. Usando fallback padrao de producao.",
+  );
+}
 
 export const CONFIG = {
-  // Webhooks — todos disparam em paralelo no submit (fire-and-forget).
-  // Configure via PUBLIC_WEBHOOK_URLS (comma-separated) no .env
-  WEBHOOK_URLS: WEBHOOK_URLS_ENV.split(",").map((u) => u.trim()).filter(Boolean),
-  REDIRECT_URL: REDIRECT_URL_ENV,
+  SITE_URL,
+  OG_IMAGE_URL,
+  PRIVACY_URL,
+  TERMS_URL,
+  CONTACT_EMAIL,
+
+  // Webhooks: todos disparam em paralelo no submit (fire-and-forget).
+  // Configure via PUBLIC_WEBHOOK_URLS (comma-separated) no .env.
+  // Se o deploy vier sem env, cai no destino de producao para nao quebrar a captura.
+  WEBHOOK_URLS,
+  REDIRECT_URL,
 
   // Event details
   EVENT_NAME: "Intensivo Claude Code",

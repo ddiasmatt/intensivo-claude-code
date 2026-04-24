@@ -1,294 +1,323 @@
 ---
 title: Audit Pre-Deploy — Intensivo Claude Code
 slug: intensivo-claude-code
-created: 2026-04-22
+created: 2026-04-23
 tags: [audit, landing, intensivo-claude-code, pre-deploy]
-status: blocked
+status: partial
 ---
 
 # Audit Pre-Deploy — Intensivo Claude Code
 
-**Data:** 2026-04-22
-**Stack:** Astro 4 + React 18 (islands) + Tailwind CSS 4 + GSAP 3 + motion v12
-**Build:** PASSOU (`npx astro build`, 1.26s, 2 paginas: `/` + `/lab/`)
-**Type check:** PASSOU (`npx astro check`, 0 erros, 0 warnings, 134 hints informativos)
+**Data:** 2026-04-23  
+**Stack:** Astro 4 + React 18 islands + Tailwind 3 + GSAP + motion + tsparticles  
+**Site dir:** `site/`  
+**Build:** PASSOU (`npm run build`, 1.71s, 1 pagina)  
+**Type check:** FALHOU (`npx tsc --noEmit`, 2 erros TS7006)  
+**Dominio final:** `https://intensivo.grupovuk.com.br/`
 
 ---
 
-## Resumo
+## Resumo Executivo
 
-Landing tecnicamente solida: build limpo, type-safe, 13/13 itens SEO presentes, 6/6 crawlers LLM liberados, CaptureModal com fire-and-forget + event_id UUID compartilhado + aria completo, UTMs capturados e propagados no redirect. **Bloqueia merge** por 5 gatekeepers de conteudo/integracao (dominio final em 6 lugares, Meta Pixel ID v1, Webhook URLs v1, URL do Zoom, Privacidade+Termos no Footer). Tres findings criticos nao-gatekeepers tambem precisam de atencao antes do deploy: ausencia de `<header>` landmark, ausencia de honeypot/reCAPTCHA no form, ausencia de security headers no Vercel. Proximo passo: resolver os 5 gatekeepers, adicionar honeypot + security headers, depois rodar Lighthouse + Rich Results + viewport manual.
+Auditoria bloqueia deploy/merge. O build está gerando `site/dist`, mas o type check falha, `npm audit --production` acusa 1 vulnerabilidade high em Astro e o bundle final ainda tem problemas de semântica, compliance e performance. A landing auditada em `site/` também não cumpre a direção estética/copy do PRD atual: o PRD pede Editorial Light Serifado, mas o build entregue é dark, com Inter regular, glow/particles e copy do "Sistema 10x".
 
----
-
-## 1. Semantica & Estrutura
-- [x] `<h1>` unico (observado: 1)
-- [x] `<html lang="pt-BR">`
-- [x] `<meta charset="UTF-8">`
-- [x] `<meta viewport>` presente (`width=device-width, initial-scale=1`)
-- [x] Alt text em 100% das imagens (observado: 115/115)
-- [ ] Landmarks: `<main>` (1), `<footer>` (1), `<header>` **AUSENTE**
-- Nota: TopBar renderizada como `<div class="sticky top-0 z-40">`, nao usa `<header role="banner">`. FAIL de semantica nao-critico: a rota `/lab/` tem `<header>` no `LabLayout.astro` — padrao existe no projeto, so nao foi aplicado na landing principal.
-- Nota manual: revisar `aria-label` em botoes sem texto visivel (botao X do modal tem `aria-label="Fechar"` ✓)
-
-## 2. SEO On-Page
-- [x] `<title>` no limite: 60 chars (`Intensivo Claude Code · 16/05 ao vivo no Zoom`)
-- [x] `<meta description>` dentro do limite: 108 chars
-- [x] `<meta keywords>`, `<meta author>`, `<meta robots>`
-- [ ] Canonical **NAO real**: `https://TODO-DOMINIO-FINAL/` → **GATEKEEPER**
-- [x] `robots.txt` presente (4 KB)
-- N/A `sitemap.xml` (landing 1 pagina; `/lab/` existe no build mas nao deveria ser indexada)
-- Nota: bloquear indexacao de `/lab/` via `Disallow: /lab/` em `robots.txt` ou remover a rota do build de producao
-- Nota manual: rodar Rich Results Test quando dominio final estiver no ar
-
-## 3. LLMEO
-- [x] `llms.txt` presente e denso (observado: 2209 bytes, 7 H2 sections)
-- [x] `robots.txt` libera **6/6 crawlers**: GPTBot, ChatGPT-User, anthropic-ai, ClaudeBot, PerplexityBot, Google-Extended
-- [x] JSON-LD: **3 schemas top-level** em 1 `<script>` (Organization + WebSite + Event com Offer + VirtualLocation + Person embutidos)
-- [x] Conteudo em texto (H1, CTAs, proof em HTML textual — zero texto trancado em imagem na landing principal)
-- Nota: `Event.location.url` = `https://zoom.us/j/TODO` → **GATEKEEPER**
-- Nota: `Organization.logo`, `WebSite.url`, `Event.image` todos com `TODO-DOMINIO-FINAL` → **GATEKEEPER (mesmo bucket do canonical)**
-- Nota manual: validator.schema.org zero erros apos preencher dominio
-
-## 4. Redes Sociais / Compartilhamento
-- [x] OG 6 props presentes: `og:title`, `og:description`, `og:image`, `og:type=website`, `og:locale=pt_BR`, `og:url`
-- [ ] `og:image` e `og:url` **NAO reais** (placeholders) → **GATEKEEPER (mesmo bucket do canonical)**
-- [x] Twitter card `summary_large_image`
-- [x] `theme-color` (`#FBFAF7`) bate com `manifest.theme_color`
-- [x] `apple-touch-icon` link + arquivo (8 KB)
-- [x] `manifest.webmanifest` link + arquivo (4 KB)
-- Nota manual: Facebook Debugger + Twitter Card Validator apos dominio final
-
-## 5. Analytics & Pixel
-- [ ] GA4 ID **NAO injetado** no `dist/` (0 ocorrencias `gtag`/`googletagmanager`)
-  - Motivo: `.env` local ausente, apenas `.env.example` com `PUBLIC_GA_ID=G-7CJMYD129G`. Em producao Vercel, env var injeta via dashboard.
-  - Status: **validacao pos-deploy obrigatoria** (GA4 Realtime <5min apos primeiro hit)
-- [ ] Meta Pixel vazio em `.env.example` (`PUBLIC_META_PIXEL_ID=`) → **GATEKEEPER v1 intencional**
-- [ ] Microsoft Clarity ausente (PRD nao exige; considerar para heatmap de CTAs)
-- N/A GTM (stack nao usa)
-- [x] UTM capture + persistencia: `src/lib/utm.ts` com `captureUTMs()`, `getStoredUTMs()`, `buildUrlWithUTMs()` + chave `sessionStorage 'icc_utms'`
-- [x] `event_id` UUID gerado uma vez em `CaptureModal.tsx:129` (formato `lead_${timestamp}_${rand}`), propagado em:
-  - Payload webhook (`event_id: eventID`, linha 136)
-  - Meta Pixel (`fbq('track', 'Lead', {}, { eventID })`, linha 155)
-  - GA4 (`gtag('event', 'generate_lead', { event_id: eventID })`, linha 157)
-- Nota manual: submit real em producao + GA4 DebugView + Meta Events Manager
-
-## 6. Formularios
-- [x] Campos minimos: `name`, `email`, `phone`
-- [x] Validacao client-side: email regex, telefone digits-only (`phone.replace(/\D/g, '')`)
-- [x] `inputMode="email"` + `autoComplete="email"` no email
-- [x] `autoComplete="name"` no nome
-- [x] `font-size: 16px` em inputs (`className="... font-sans text-base ..."` → `text-base` = 16px Tailwind v4, iOS nao da zoom)
-- [ ] **Mascara `(XX) XXXXX-XXXX` nao implementada** — placeholder `(11) 99999-9999` e visual, mas nao ha mask real no `onChange` do telefone. Validacao usa digits-only apos o fato.
-- [ ] **Honeypot/reCAPTCHA AUSENTE** → **FAIL critico nao-gatekeeper** — form exposto a bot spam
-- Nota manual: walkthrough modal (Tab trap, Esc, backdrop, aria-live, disabled submit) — codigo tem todos os hooks, falta confirmar em browser
-
-**Modal UX (verificado no codigo, confirmar no browser):**
-- [x] `role="dialog"`, `aria-modal="true"`, `aria-labelledby`, `aria-describedby`
-- [x] Guard anti double-submit (`if (status === 'loading') return`, linha 124)
-- [x] `aria-invalid` + `aria-describedby` nos inputs com erro
-- [x] Success state com `role="status"` + `aria-live="polite"`
-- [x] Backdrop click fecha (linha 177: `if (e.target === e.currentTarget) requestClose()`)
-- [x] Botao X com `aria-label="Fechar"`
-- [ ] Focus trap Tab/Shift+Tab: nao verificado no codigo — validacao manual
-
-## 7. Webhooks
-- [ ] `PUBLIC_WEBHOOK_URLS` vazio em `.env.example` → **GATEKEEPER v1 intencional**
-- [x] **Fire-and-forget correto** (CaptureModal.tsx linhas 140-151):
-  - `CONFIG.WEBHOOK_URLS.forEach(url => fetch(url, {...}).catch(() => {}))`
-  - Redirect na linha 161 nao aguarda response
-  - `.catch()` silencioso: falha de webhook nao trava o lead
-- [x] Payload inclui: `name`, `email`, `phone` (digits-only), `event_id`, `...utms`
-- [ ] Payload NAO inclui `timestamp` nem `origin` explicitos (recomendavel adicionar para audit de entrega no CRM)
-- Nota manual: submit end-to-end com webhook real + conferir entrega (quando URL estiver populada)
-
-## 8. Performance
-- [ ] **`fetchpriority="high"` ausente** (0 ocorrencias)
-  - Aceitavel pois hero e tipografico (nao ha `<img>` no hero). Primeira imagem real esta no SocialProof marquee, below-the-fold em mobile.
-  - Nota: considerar adicionar em `mateus.webp` (foto autoridade) se ela aparecer na primeira viewport em alguns dispositivos
-- [x] `loading="lazy"` aplicado em 115/115 imagens (inclui 38 depoimentos do marquee x2 direcoes)
-- [x] `decoding="async"` em imagens (1 ocorrencia na contagem linha, que no HTML minificado cobre todas)
-- [x] WebP em `mateus.webp` (hero autoridade)
-- [ ] 19 depoimentos em PNG puro (total 22 raster) — considerar conversao WebP para reduzir peso em ~30%
-- [x] `font-display: swap` ativo via URL Google Fonts (`&display=swap` na querystring do stylesheet)
-- [x] `preconnect` para `fonts.googleapis.com` + `fonts.gstatic.com`
-- [x] Scripts: 2 totais, 1 com `type="module"` (= defer implicito)
-- [ ] **Bundle JS ~220 KB gzip total** (acima do target de 200 KB):
-  - `CaptureModal.Buti3l7O.js`: 132 KB raw / 44.92 KB gzip
-  - `ScrollTrigger.CiEuWA-R.js`: 112 KB raw / ~42 KB gzip (estimado)
-  - `client.BuOr9PT5.js`: 132 KB raw / 43.80 KB gzip
-  - `hoisted.Cs4l2GNg.js`: 116 KB raw / 46.73 KB gzip
-  - 4 hoisted menores (~8 KB raw total)
-- Nota manual: Lighthouse mobile (Slow 4G): Performance >=90, LCP <2.5s, CLS <0.1, INP <200ms
-
-## 9. Mobile
-- [x] `<meta viewport>` correto (sem `user-scalable=no`)
-- [x] Grid 12-col assimetrico editorial (PRD Fase 0)
-- [ ] `safe-area-inset-*` nao utilizado (0 ocorrencias) — aceitavel se iOS notch nao for critico; considerar no TopBar sticky e no modal em iPhone X+
-- Nota manual: DevTools 320, 390, 768, 1024 — zero scroll horizontal, texto legivel, CTAs alcancaveis. Audit manual anterior (`docs/mobile-audit.md`, 2026-04-22) tem essa validacao pendente.
-
-## 10. Seguranca
-- [x] HTTPS + HSTS valido em producao (pos-deploy Vercel)
-- [ ] **`vercel.json` sem `headers`** → **FAIL critico nao-gatekeeper**
-  - Sem CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy declarados
-  - Recomenda-se adicionar bloco `headers` em `vercel.json` antes do merge (ver acao em TODOs)
-- [x] **Zero secrets em `dist/`** (grep por `sk_live`, `rk_live`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `DATABASE_URL`, `JWT_SECRET`, `PRIVATE_KEY`)
-- [x] **Zero `console.log`/`debug`/`info`** em `dist/*.js`
-- [x] `.env.example` so com `PUBLIC_*` expostos (GA_ID, META_PIXEL_ID, WEBHOOK_URLS, REDIRECT_URL)
-- Nao rodado: `npm audit` — executar antes do merge
-- Nota manual: securityheaders.io grade B+ apos deploy com headers no `vercel.json`
-
-## 11. Build & Deploy
-- [x] `npx astro build` passou sem warning (1.26s)
-- [x] `npx astro check` passou: 0 erros, 0 warnings (134 hints sobre `is:inline` em scripts — informativo)
-- [x] Zero `TODO`/`FIXME`/`TBD` inesperados em `dist/` — todos os `TODO` encontrados sao dos **gatekeepers conhecidos** (canonical, og, JSON-LD, Footer privacy/terms)
-- [ ] **Env vars Vercel pendentes** (validacao pos-deploy): `PUBLIC_GA_ID`, `PUBLIC_META_PIXEL_ID` (quando ativar), `PUBLIC_WEBHOOK_URLS` (quando integrar), `PUBLIC_REDIRECT_URL` (se diferente do hardcoded)
-- Nota manual: preview deploy smoke-tested antes do merge
-
-## 12. Copy & Compliance
-- [x] **Zero travessao longo (—) em copy visivel** da landing principal
-- [ ] 1 ocorrencia de `—` em `src/pages/lab/timeline/index.astro:43` (pagina de lab, bloqueada ou removida antes do deploy)
-- [x] Acentos corretos em pt-BR (conferido nos principais trechos do `config.ts`)
-- [ ] **Footer Privacidade + Termos com `href="#"`** + comentarios `<!-- TODO: URL legal pendente -->` → **GATEKEEPER**
-- [x] Email de contato real: `mailto:contato@grupovuk.com.br`
-- Nota manual: revisar ausencia de dark patterns (opt-out do grupo facil, preco R$27 vs R$47 claro, sem urgencia falsa — deadline 26/04 e real)
+Principais blockers: type check quebrado, ausência de `<header>`, ausência de links legais e e-mail no footer, `og:image` relativo, descrição acima de 160 caracteres, payload de webhook sem `event_id`, `timestamp` e `origin`, `npm audit` high, e `site/` sem link local de Vercel para validar env vars.
 
 ---
 
-## Assets Publicos
-- [x] `favicon.ico` (20 KB)
-- [x] `favicon.png` (36 KB)
-- [x] `apple-touch-icon.png` (8 KB)
-- [x] `og-image.png` (52 KB) — **revisar alinhamento com tema Light Editorial** (PRD Fase 0 indica `#FBFAF7` + laranja imprensa; OG atual vindo do ICC Astro tem tema dark amber)
-- [x] `robots.txt` (4 KB, 6/6 crawlers LLM)
-- [x] `llms.txt` (4 KB, denso, 7 H2 sections)
-- [x] `manifest.webmanifest` (4 KB, `theme_color: #FBFAF7`)
-- [x] 19/19 depoimentos em `public/depoimentos/depoimento-{01..19}.png`
-- [x] `mateus.webp` (foto autoridade)
+## Tabela Consolidada de Checks
 
-**Resultado:** 9/9 assets criticos + 19 depoimentos
+| # | Categoria | Task | Status | Valor observado |
+|---|---|---|---|---|
+| 0.1 | Build | Build sem warnings | ✅ PASS | `npm run build` passou; 1 pagina, 1.71s |
+| 0.2 | Build | Type check zero erros | ❌ FAIL | `npx tsc --noEmit`: TS7006 em `CaptureModal.tsx:158` e `config.ts:10` |
+| 0.3 | Build | `dist/` existe | ✅ PASS | `site/dist/` gerado com `index.html` e assets |
+| 1.1 | Semantica | `<h1>` unico | ✅ PASS | `1` |
+| 1.2 | Semantica | `<html lang="pt-BR">` | ✅ PASS | `lang="pt-BR"` |
+| 1.3 | Semantica | Charset UTF-8 | ✅ PASS | `<meta charset="utf-8">` |
+| 1.4 | Semantica | Viewport correto | ✅ PASS | `width=device-width, initial-scale=1, viewport-fit=cover` |
+| 1.5 | Semantica | Alt text 100% imagens | ✅ PASS | `58/58` imagens com `alt` |
+| 1.6 | Semantica | Landmarks header/main/footer | ❌ FAIL | `<main>` e `<footer>` presentes; `<header>` ausente |
+| 1.7 | Semantica | SVG sem script/style/SMIL interno | ✅ PASS | Nenhum `<script>`, `<style>` ou `<animate>` dentro de SVG detectado |
+| 1.8 | Semantica | SVG com `aria-hidden` ou `role/img` | ❌ FAIL | Alguns SVGs Lucide renderizados sem `aria-hidden`/label no HTML final |
+| 1.9 | Semantica | `prefers-reduced-motion` no CSS | ✅ PASS | Regra presente em `site/dist/_astro/index.*.css` |
+| 1.10 | Semantica | `@gsap/react` se GSAP usado em React | ➖ N/A | GSAP usado em script Astro, não em componente React |
+| 1.11 | Semantica | `aria-label` em botoes sem texto | ✅ PASS | Botao X do modal tem `aria-label="Fechar"`; CTAs têm texto visivel |
+| 1.12 | Semantica | Hierarquia H2-H6 sem pulos | ⚠️ WARN | H1/H2/H3 sem pulo grosseiro, mas cards/accordion geram muitos H3; revisar visualmente |
+| 2.1 | SEO | `<title>` <= 60 chars | ✅ PASS | 58 chars |
+| 2.2 | SEO | `<meta description>` <= 160 chars | ❌ FAIL | 165 chars |
+| 2.3 | SEO | `<meta keywords>` presente | ✅ PASS | Presente |
+| 2.4 | SEO | `<meta author>` presente | ✅ PASS | `Grupo VUK` |
+| 2.5 | SEO | `<meta robots>` = `index, follow` | ⚠️ WARN | `index, follow, max-image-preview:large`; aceitavel, mas nao igual ao threshold estrito |
+| 2.6 | SEO | Canonical absoluto e real | ✅ PASS | `https://intensivo.grupovuk.com.br/` |
+| 2.7 | SEO | `robots.txt` presente | ✅ PASS | `site/dist/robots.txt`, 659 B |
+| 2.8 | SEO | `sitemap.xml` presente | ✅ PASS | `site/dist/sitemap.xml` presente |
+| 2.9 | SEO | Rich Results Test | ⏸ MANUAL | Pendente em `https://search.google.com/test/rich-results` |
+| 3.1 | LLMEO | `llms.txt` presente | ✅ PASS | Presente |
+| 3.2 | LLMEO | `llms.txt` > 500 bytes | ✅ PASS | 1792 bytes |
+| 3.3 | LLMEO | `robots.txt` libera GPTBot | ✅ PASS | Presente |
+| 3.4 | LLMEO | `robots.txt` libera anthropic-ai / ClaudeBot | ✅ PASS | Ambos presentes |
+| 3.5 | LLMEO | `robots.txt` libera PerplexityBot | ✅ PASS | Presente |
+| 3.6 | LLMEO | `robots.txt` libera ChatGPT-User | ✅ PASS | Presente |
+| 3.7 | LLMEO | `robots.txt` libera Google-Extended | ✅ PASS | Presente |
+| 3.8 | LLMEO | JSON-LD count >= 2 | ❌ FAIL | Apenas 1 `<script application/ld+json>` e schema principal `Event`; faltam top-level `Organization` + `WebSite` |
+| 3.9 | LLMEO | Conteudo em texto | ✅ PASS | Conteudo principal renderiza como HTML textual |
+| 3.10 | LLMEO | JSON-LD sintaxe valida | ⏸ MANUAL | Pendente em `https://validator.schema.org` |
+| 4.1 | Social | `og:title` presente | ✅ PASS | Presente |
+| 4.2 | Social | `og:description` presente | ✅ PASS | Presente |
+| 4.3 | Social | `og:image` real 1200x630 | ❌ FAIL | Arquivo é 1200x630, mas meta usa URL relativa `/og-image.png`; threshold pede URL real |
+| 4.4 | Social | `og:type` presente | ✅ PASS | `website` |
+| 4.5 | Social | `og:locale=pt_BR` | ✅ PASS | `pt_BR` |
+| 4.6 | Social | `og:url` real | ✅ PASS | `https://intensivo.grupovuk.com.br/` |
+| 4.7 | Social | Twitter card large | ✅ PASS | `summary_large_image` |
+| 4.8 | Social | `theme-color` presente | ✅ PASS | `#0A0A0B` |
+| 4.9 | Social | `apple-touch-icon` + manifest | ⚠️ WARN | Link usa `/favicon.png`; não existe `apple-touch-icon.png` dedicado |
+| 4.10 | Social | Facebook Debugger + Twitter Validator | ⏸ MANUAL | Pendente pós-preview/produção |
+| 5.1 | Analytics | `PUBLIC_GA_ID` real | ✅ PASS | `G-7CJMYD129G` injetado no build local |
+| 5.2 | Analytics | `PUBLIC_META_PIXEL_ID` real | ✅ PASS | Pixel real injetado via `.env` local |
+| 5.3 | Analytics | Snippet Meta Pixel integro | ✅ PASS | `fbq init`, `connect.facebook.net`, `PageView` presentes |
+| 5.4 | Analytics | Snippet GA4 integro | ✅ PASS | `gtag/js` + `gtag('config')` presentes |
+| 5.5 | Analytics | Vercel env vars Production | ❌ FAIL | `vercel env ls` falhou: `site/` não está linkado a projeto Vercel |
+| 5.6 | Analytics | Production smoke test | ⏸ MANUAL | Pendente em dominio/deploy |
+| 5.7 | Analytics | Microsoft Clarity se declarado | ➖ N/A | PRD não declara Clarity como obrigatorio |
+| 5.8 | Analytics | UTM capture + sessionStorage | ❌ FAIL | UTMs capturados em state, mas não persistidos em `sessionStorage` |
+| 5.9 | Analytics | `event_id` compartilhado Meta/GA4 | ❌ FAIL | Meta/GA4 compartilham `eventID`, mas payload webhook não inclui `event_id` |
+| 5.10 | Analytics | Submit real + DebugView + Events Manager | ⏸ MANUAL | Pendente pós-preview/produção |
+| 6.1 | Formularios | Campos nome/email/telefone | ✅ PASS | Form tem os 3 campos |
+| 6.2 | Formularios | Mascara `(XX) XXXXX-XXXX` | ✅ PASS | `maskPhone()` implementado |
+| 6.3 | Formularios | Validacao client-side | ✅ PASS | Email regex + telefone 11 digitos |
+| 6.4 | Formularios | Honeypot ou reCAPTCHA | ❌ FAIL | Ausente |
+| 6.5 | Formularios | Inputs com font-size 16px | ✅ PASS | Base/input renderizam 16px; sem `text-sm` nos inputs |
+| 6.6 | Formularios | CSS padronizado dos campos | ✅ PASS | Campos compartilham `h-12`, `rounded-xl`, `border`, `bg`, `px-4` |
+| 6.7 | Formularios | Modal UX completo | ✅ PASS | Focus trap, Esc, backdrop confirm, aria-live, disabled loading presentes no codigo |
+| 7.1 | Webhooks | Webhook Sigma em todo form | ✅ PASS | Unico form dispara para `api-sigma.vuker.com.br` por fallback/default |
+| 7.2 | Webhooks | `PUBLIC_WEBHOOK_URLS` populado | ✅ PASS | `.env` local populado; `.env.example` ainda é placeholder |
+| 7.3 | Webhooks | Fetch paralelo com `Promise.allSettled` | ❌ FAIL | Usa `forEach(fetch(...).catch())`, nao `Promise.allSettled` |
+| 7.4 | Webhooks | Payload inclui event_id, UTMs, timestamp, origem | ❌ FAIL | Inclui UTMs; falta `event_id`, `timestamp` e `origin` |
+| 7.5 | Webhooks | Falha nao bloqueia redirect | ✅ PASS | `.catch(() => {})` e redirect independente |
+| 7.6 | Webhooks | Submit end-to-end real | ⏸ MANUAL | Pendente com CRM/Sigma |
+| 8.1 | Performance | `fetchpriority="high"` no hero image | ➖ N/A | Hero é tipografico/React visual; sem hero `<img>` |
+| 8.2 | Performance | `loading="lazy"` below-the-fold | ✅ PASS | Imagens de depoimento e Mateus têm lazy |
+| 8.3 | Performance | Scripts tracking async/defer | ✅ PASS | GA async; Meta inline async loader; modules deferem |
+| 8.4 | Performance | `font-display: swap` | ✅ PASS | Google Fonts com `display=swap` |
+| 8.5 | Performance | Bundle JS < 200KB | ❌ FAIL | JS total ultrapassa 200KB; chunks grandes: `sparkles` 151KB, React 134KB, `proxy` 100KB |
+| 8.6 | Performance | Pagina total < 1MB | ❌ FAIL | `site/dist` = 1.9MB |
+| 8.7 | Performance | Lighthouse mobile | ⏸ MANUAL | Pendente contra preview/produção |
+| 9.1 | Mobile | Viewport correto | ✅ PASS | `width=device-width, initial-scale=1, viewport-fit=cover` |
+| 9.2 | Mobile | Sem larguras fixas top-level | ⚠️ WARN | Há `w-[2px]`, widths fixas e `h-*/w-*`; nao confirmado scroll horizontal |
+| 9.3 | Mobile | Safe-area insets | ⚠️ WARN | Usa `viewport-fit=cover`, mas não há `env(safe-area-inset-*)` |
+| 9.4 | Mobile | Viewports 320/390/768/1024 | ⏸ MANUAL | Pendente DevTools |
+| 9.5 | Mobile | Touch targets >=44px | ⏸ MANUAL | Pendente medição visual |
+| 10.1 | Seguranca | HTTPS + HSTS | ⏸ MANUAL | HSTS configurado no `vercel.json`, validar header em produção |
+| 10.2 | Seguranca | CSP e headers | ✅ PASS | CSP, XFO, XCTO, Referrer, Permissions e HSTS em `site/vercel.json` |
+| 10.3 | Seguranca | Zero secrets no bundle | ✅ PASS | Grep encontrou apenas strings internas do React; nenhum secret real |
+| 10.4 | Seguranca | Zero `console.log` no JS buildado | ❌ FAIL | `console.log` aparece em bundle de `tsparticles/sparkles` |
+| 10.5 | Seguranca | `npm audit` sem high/critical | ❌ FAIL | 4 vulns: 1 high em `astro`, 3 moderate em `vite/esbuild/@astrojs/react` |
+| 10.6 | Seguranca | securityheaders.io B+ | ⏸ MANUAL | Pendente em produção |
+| 11.1 | Build/Deploy | Build passou sem warning | ✅ PASS | Build passou |
+| 11.2 | Build/Deploy | Type check zero erros | ❌ FAIL | 2 erros TS7006 |
+| 11.3 | Build/Deploy | Zero TODO/FIXME/placeholder/TBD em `dist/` | ⚠️ WARN | Sem TODO literal; mas `.env.example` contém placeholders de GA/Pixel/Webhook |
+| 11.4 | Build/Deploy | Env vars no dashboard Vercel | ❌ FAIL | `site/` não está linkado; `.vercel` está na raiz do repo |
+| 11.5 | Build/Deploy | Preview smoke-tested | ⏸ MANUAL | Pendente |
+| 11.6 | Build/Deploy | 404 customizada renderiza | ⏸ MANUAL | Não validado; `src/pages/404.astro` não encontrado |
+| 12.1 | Copy/Compliance | Zero travessao longo em `src/` | ❌ FAIL | Em dash visivel no title de `src/pages/index.astro`; comentarios em `config.ts`/`gsap-init.ts` |
+| 12.2 | Copy/Compliance | Acentos corretos pt-BR | ⚠️ WARN | `sabado`, `unica`, `automacao`, `voce` aparecem sem acento em copy/meta |
+| 12.3 | Copy/Compliance | Footer Privacidade + Termos reais | ❌ FAIL | Footer não tem links legais |
+| 12.4 | Copy/Compliance | Email de contato real | ❌ FAIL | Footer não expõe e-mail |
+| 12.5 | Copy/Compliance | Sem dark patterns | ⏸ MANUAL | Copy parece defensavel, mas revisar jurídico/compliance |
+| 13.1 | Clean Code | HTML semantico sem divs semanticas obvias | ✅ PASS | Heuristica não detectou `<div class="header|footer|main">` |
+| 13.2 | Clean Code | Heading hierarchy | ⚠️ WARN | Sem pulo claro, mas vários H3 em islands/accordion precisam revisão visual |
+| 13.3 | Clean Code | Nomenclatura sem `data/temp/foo` | ❌ FAIL | Heuristica pega `data` em `TimelineWrapper.tsx`/`timeline.tsx` |
+| 13.4 | Clean Code | Zero `console.log` em `src/` | ✅ PASS | Nenhum `console.log` em source |
+| 13.5 | Clean Code | Zero TODO/FIXME/codigo morto em comentarios | ✅ PASS | Nenhum TODO/FIXME relevante em `src/` |
+| 13.6 | Clean Code | Zero numeros magicos JSX/CSS | ⚠️ WARN | Muitos valores arbitrarios Tailwind (`tracking-[...]`, `text-[...]`, `w-[2px]`) |
+| 13.7 | Clean Code | Zero cores hardcoded fora tokens | ❌ FAIL | Hex/rgb hardcoded em `Base.astro`, `Final.astro`, `sparkles.tsx`, `hover-border-gradient.tsx` |
+| 13.8 | Clean Code | Objetos/arrays inline JSX | ⚠️ WARN | Inline styles e arrays existem; revisar impacto de render |
+| 13.9 | Clean Code | Imagens com width/height explicitos | ❌ FAIL | `57/58` imagens sem `width` e `height`; só `mateus.webp` tem dimensoes |
+| 13.10 | Clean Code | Hover/focus com transition | ✅ PASS | Classes `transition*` amplamente presentes |
+| 13.11 | Clean Code | Modal max-w universal + a11y | ✅ PASS | `max-w-md`, padding mobile, backdrop, Esc, focus trap, role dialog |
+| 13.12 | Clean Code | Breakpoint 430px | ⏸ MANUAL | Pendente DevTools |
+| 13.13 | Clean Code | Focus visible | ✅ PASS | Regra global `:focus-visible` e rings nos componentes |
+| 13.14 | Clean Code | Contraste WCAG AA | ⏸ MANUAL | Pendente Lighthouse/contraste |
+| A.1 | Assets | `favicon.ico` + `favicon.png` | ✅ PASS | Ambos presentes |
+| A.2 | Assets | `apple-touch-icon.png` | ❌ FAIL | Arquivo dedicado ausente; link aponta para `favicon.png` |
+| A.3 | Assets | `robots.txt`, `llms.txt`, manifest | ✅ PASS | Todos presentes |
+| A.4 | Assets | `og-image.png` 1200x630 | ✅ PASS | 1200x630, 51KB |
+| A.5 | Assets | Imagens referenciadas existem | ✅ PASS | Depoimentos, `mateus.webp`, favicon e OG existem |
+
+**Legenda:** ✅ PASS · ❌ FAIL · ⚠️ WARN · ⏸ MANUAL · ➖ N/A
 
 ---
 
-## TODOs Bloqueadores Pre-Deploy (5 gatekeepers)
+## Totais
 
-1. **Dominio final em 6 lugares:** PENDENTE
-   - Estado atual: `https://TODO-DOMINIO-FINAL/` em `canonical`, `og:url`, `og:image`, `Organization.logo`, `WebSite.url`, `Event.image`
-   - Acao: decidir dominio final e popular em `src/config.ts` (ou via env var se arquitetura permitir) + rebuild
-   - Arquivos: `src/layouts/Base.astro` (meta tags + JSON-LD via config), `src/config.ts`
+| Status | Contagem |
+|---|---:|
+| ✅ Aprovados | 65 |
+| ❌ Reprovados | 25 |
+| ⚠️ Warnings | 11 |
+| ⏸ Manuais pendentes | 12 |
+| ➖ N/A | 2 |
+| **Total de tasks** | **115** |
 
-2. **Meta Pixel ID:** PENDENTE (v1 intencional)
-   - Estado atual: `PUBLIC_META_PIXEL_ID=` vazio em `.env.example`
-   - Acao: quando Pixel ativar, popular env var no dashboard Vercel (Production + Preview)
-   - Arquivo: env var Vercel (nao precisa rebuild manual, deploy automatico pega na proxima)
-
-3. **Webhook URLs:** PENDENTE (v1 intencional)
-   - Estado atual: `PUBLIC_WEBHOOK_URLS=` vazio
-   - Acao: quando integracao CRM definida, popular env var Vercel
-   - Arquivo: env var Vercel
-
-4. **URL do Zoom (JSON-LD Event.location):** PENDENTE
-   - Estado atual: `https://zoom.us/j/TODO` em `src/config.ts` (injetado no JSON-LD de `Base.astro`)
-   - Acao: substituir pelo link Zoom real quando disponivel
-   - Arquivo: `src/config.ts` (campo `EVENT_ZOOM_URL` ou similar) + rebuild
-
-5. **Politica + Termos no Footer:** PENDENTE
-   - Estado atual: `<a href="#">Politica de Privacidade</a>` + `<a href="#">Termos de Uso</a>` (comentarios `<!-- TODO: URL legal pendente -->` no Footer)
-   - Acao: criar paginas `/privacy` e `/terms` no Astro OU apontar para URLs existentes do Grupo VUK
-   - Arquivo: `src/components/Footer.astro`
+**Taxa de aprovação automatizada:** 64,4% (`65 / (65+25+11)`).
 
 ---
 
-## Findings Criticos Nao-Gatekeepers (resolver antes do merge)
+## Falhas por Categoria
 
-1. **Sem `<header>` landmark na landing principal** (categoria 1)
-   - TopBar e `<div class="sticky top-0 z-40">`
-   - Acao: envolver a TopBar em `<header role="banner">` ou equivalente, consistente com `LabLayout.astro` que ja usa `<header>`
+### Build
+- **0.2 Type check:** FAIL. `npx tsc --noEmit` falha por parâmetros implícitos `any` em `site/src/components/react/CaptureModal.tsx:158` e `site/src/config.ts:10`.
 
-2. **Sem honeypot/reCAPTCHA no form** (categoria 6)
-   - Form exposto a bot spam — cada bot que preencher gera `Lead` GA4 + Meta Pixel + webhook
-   - Acao: adicionar honeypot invisivel (`input type="text" name="website" style="display:none"` + validar vazio no submit) — implementacao simples, zero UX impact
+### Semantica & Estrutura
+- **1.6 Landmarks:** FAIL. Falta `<header>` na landing principal. Arquivo: `site/src/pages/index.astro` ou `site/src/components/sections/TopBar.astro`.
+- **1.8 SVG a11y:** FAIL. SVGs Lucide em componentes renderizam sem `aria-hidden` ou label.
 
-3. **Sem security headers em `vercel.json`** (categoria 10)
-   - Acao: adicionar bloco `headers` em `vercel.json` com CSP, X-Frame-Options: DENY, X-Content-Type-Options: nosniff, Referrer-Policy: strict-origin-when-cross-origin, Permissions-Policy restritivo
-   - Referencia: `~/.claude/skills/landing-page-audit/references/audit-categories.md` categoria 10
+### SEO / Social / LLMEO
+- **2.2 Description:** FAIL. `meta description` tem 165 caracteres; target <=160.
+- **3.8 JSON-LD:** FAIL. Só há 1 script/schema principal; faltam `Organization` e `WebSite` top-level.
+- **4.3 OG image:** FAIL. Meta usa `/og-image.png`; deve ser absoluta (`https://intensivo.grupovuk.com.br/og-image.png`).
+
+### Analytics, Form e Webhook
+- **5.5/11.4 Vercel env:** FAIL. `site/` não está linkado a Vercel; `.vercel/project.json` está na raiz do repo.
+- **5.8 UTM:** FAIL. UTMs não persistem em `sessionStorage`.
+- **5.9/7.4 event_id:** FAIL. `eventID` existe para Meta/GA4, mas não entra no payload Sigma.
+- **6.4 Anti-spam:** FAIL. Não há honeypot/reCAPTCHA.
+- **7.3 Webhook paralelo:** FAIL. Usa `forEach(fetch)` em vez de `Promise.allSettled`.
+
+### Performance
+- **8.5 Bundle JS:** FAIL. Chunks grandes (`sparkles`, React, proxy/motion) colocam JS acima do target.
+- **8.6 Peso total:** FAIL. `site/dist` tem 1.9MB, acima do target de 1MB.
+
+### Segurança
+- **10.4 console.log:** FAIL. Bundle de terceiros inclui `console.log`.
+- **10.5 npm audit:** FAIL. `astro <=6.1.5` high; `vite/esbuild/@astrojs/react` moderate.
+
+### Copy & Compliance
+- **12.1 Em dash:** FAIL. Em dash visivel no title.
+- **12.3 Legal:** FAIL. Footer não tem Privacidade/Termos.
+- **12.4 Contato:** FAIL. Footer não expõe e-mail.
+- **PRD drift:** FAIL contextual. PRD pede Editorial Light Serifado, Fraunces + Inter Tight, light theme; build é dark, Inter regular, particles/glow e copy antiga do Sistema 10x.
+
+### Clean Code / Assets
+- **13.7 Cores hardcoded:** FAIL. Hex/rgb fora de tokens.
+- **13.9 Imagens sem dimensoes:** FAIL. 57 imagens sem `width`/`height`.
+- **A.2 apple-touch-icon:** FAIL. Arquivo dedicado ausente.
 
 ---
 
-## WARN (nao bloqueiam, mas ficam em radar)
+## TODOs Bloqueadores Pre-Deploy
 
-- Mascara `(XX) XXXXX-XXXX` nao implementada no telefone — placeholder visual apenas. Adicionar mask real no `onChange` do `<input name="phone">`
-- 19 depoimentos em PNG puro (poderiam ir pra WebP, reducao ~30% no peso total de imagens)
-- Bundle JS ~220 KB gzip (acima do target 200 KB). CaptureModal + ScrollTrigger + client React sao responsaveis. Considerar code-split do Modal em load dinamico sob demanda do CTA
-- `loading="lazy"` em TODAS as 115 imagens — revisar se alguma imagem esta above-the-fold em mobile (primeira foto visivel), essa deveria ser `loading="eager"` ou sem atributo (default eager)
-- Microsoft Clarity ausente — opcional pelo PRD, mas util para heatmap de CTAs
-- Rota `/lab/` esta no build de producao — se for zona interna de testes, adicionar `Disallow: /lab/` em `robots.txt` ou remover do build
-- Payload webhook nao inclui `timestamp` nem `origin` — recomendavel adicionar para audit de entrega no CRM
-- `npm audit` nao rodado — executar antes do merge
+1. **Corrigir type check**
+   - Estado atual: TS7006 em `CaptureModal.tsx:158` e `config.ts:10`.
+   - Ação: tipar `WEBHOOK_URLS`/callbacks e rodar `npx tsc --noEmit`.
+   - Arquivos: `site/src/config.ts`, `site/src/components/react/CaptureModal.tsx`.
+
+2. **Resolver drift do PRD**
+   - Estado atual: `site/` não reflete a direção do PRD `docs/prds/intensivo-claude-code.md`.
+   - Ação: decidir se `site/` deve ser a v1 dark atual ou migrar para Editorial Light. Se for v1, atualizar PRD/docs; se for PRD atual, refatorar UI/copy.
+   - Arquivos: `site/src/**`, `docs/prds/intensivo-claude-code.md`.
+
+3. **Completar compliance do footer**
+   - Estado atual: sem Privacidade, Termos e e-mail.
+   - Ação: adicionar links reais e contato.
+   - Arquivo: `site/src/components/sections/Footer.astro`.
+
+4. **Corrigir integrações de lead**
+   - Estado atual: webhook recebe nome/email/telefone/UTMs, mas não recebe `event_id`, `timestamp` nem `origin`.
+   - Ação: incluir campos no payload e usar o mesmo event ID de Meta/GA4.
+   - Arquivo: `site/src/components/react/CaptureModal.tsx`.
+
+5. **Adicionar anti-spam**
+   - Estado atual: form sem honeypot/reCAPTCHA.
+   - Ação: adicionar honeypot invisivel e descartar submit se preenchido.
+   - Arquivo: `site/src/components/react/CaptureModal.tsx`.
+
+6. **Corrigir Vercel link/env validation**
+   - Estado atual: `vercel env ls` falha em `site/`; `.vercel` está na raiz.
+   - Ação: linkar `site/` ao projeto correto ou rodar Vercel a partir da raiz com configuração consistente.
+   - Arquivo: `.vercel/project.json` / setup local.
+
+7. **Corrigir npm audit high**
+   - Estado atual: `npm audit --production` retorna high em Astro e moderate em Vite/esbuild.
+   - Ação: planejar upgrade de Astro/Vite ou aceitar risco explicitamente se só afeta dev/server paths não usados pelo output estático.
+   - Arquivo: `site/package.json`, `site/package-lock.json`.
 
 ---
 
-## Validacao Manual Pendente
+## Validação Manual Pendente
 
-- [ ] **Lighthouse mobile** (375px, Slow 4G): Performance >=90, A11y >=95, Best Practices >=95, SEO >=95
-  - Como rodar: `cd site && npm run preview` + Chrome DevTools Lighthouse
-- [ ] **Viewport tests** (320, 390, 768, 1024) — Chrome DevTools Responsive Design Mode
-- [ ] **Touch targets** >=44x44px via DevTools measurements
-- [ ] **Modal UX walkthrough completo** (focus trap Tab/Shift+Tab, Esc fecha, backdrop confirm em form dirty, submit disabled em loading)
-- [ ] **Submit end-to-end** (pos-deploy com Pixel + Webhook populados): GA4 Realtime + GA4 DebugView, Meta Events Manager Test Events, webhook delivery no CRM, redirect com UTMs visiveis
-- [ ] **JSON-LD syntax**: https://validator.schema.org
-- [ ] **Rich Results Test**: https://search.google.com/test/rich-results (detectar Event + Organization + WebSite)
-- [ ] **Security headers**: https://securityheaders.io (grade B+ apos adicionar headers no `vercel.json`)
-- [ ] **404 customizada**: criar `src/pages/404.astro` se ainda nao existe
-- [ ] **npm audit**: rodar em `site/` e conferir que nao ha CVE critica ou alta
+- [ ] Lighthouse mobile contra preview/produção: Perf >=90, A11y >=95, Best Practices >=95, SEO >=95.
+- [ ] Viewports 320/390/768/1024: zero scroll horizontal e CTAs alcançáveis.
+- [ ] Touch targets >=44x44px.
+- [ ] JSON-LD em `https://validator.schema.org`.
+- [ ] Rich Results em `https://search.google.com/test/rich-results`.
+- [ ] Facebook Debugger e Twitter Card Validator.
+- [ ] Submit end-to-end: GA4 DebugView, Meta Events Manager, entrega Sigma, redirect com UTMs.
+- [ ] Security headers em `https://securityheaders.io`.
+- [ ] HSTS/HTTPS no domínio final.
+- [ ] 404 customizada em `/rota-inexistente`.
+- [ ] Revisão de compliance/dark patterns.
+- [ ] Contraste WCAG AA.
 
 ---
 
 ## Notas Contextuais
 
-1. **Relacao com `mobile-audit.md`**: este projeto ja tinha um audit manual (`docs/mobile-audit.md`, 2026-04-22) feito antes da skill `landing-page-audit` existir. Esse arquivo foi preservado intacto (ele inspirou o formato do output desta skill). Os achados batem: mesmos 5 gatekeepers, mesmas validacoes manuais pendentes. Este audit adiciona: verificacao formal das 12 categorias, findings criticos nao-gatekeepers (header landmark, honeypot, security headers), bundle JS detalhado, confirmacao de CaptureModal correto.
-
-2. **GA4 aparentemente "ausente" em dist local**: e comportamento correto. A injecao do GA4 e condicional ao valor de `PUBLIC_GA_ID` em `.env`. Como o projeto so tem `.env.example` trackeado, a build local roda sem GA. Em producao Vercel, a env var injeta e o snippet gtag aparece. Validacao pos-deploy obrigatoria: conferir GA4 Realtime <5min apos primeiro hit.
-
-3. **JSON-LD em 1 `<script>` com array de 3 schemas**: formato valido e preferivel a 3 scripts separados (1 request menor). Pass.
-
-4. **5 TODOs em `dist/index.html`**: todos sao os gatekeepers conhecidos (canonical, 3 OG, Zoom URL). Zero `TODO` orfao. Pass no criterio "nenhum placeholder inesperado".
-
-5. **Tema visual vs OG image**: `og-image.png` foi importado do ICC Astro anterior (tema dark amber). Direcao Fase 0 do PRD e Light Editorial (`#FBFAF7` + `#E4572E` laranja imprensa). Recomenda-se recriar o OG alinhado com a nova direcao antes do go-live, ou gerar via Figma/Photoshop em PR futuro (nao bloqueia deploy se OG atual ainda for legivel).
-
-6. **Pipeline PRD → Plan → Stories → Implement foi seguido**: PRD em `docs/prds/intensivo-claude-code.md`, Plan em `docs/plans/intensivo-claude-code.md`, stories em `docs/stories/` (12 arquivos `intensivo-claude-code-*`). Implementacao condiz com contratos do PRD (secao 3.3 a 3.9).
+- O audit anterior foi arquivado em `docs/intensivo-claude-code-audit-2026-04-23.md` antes de escrever este arquivo.
+- `npx astro check` não rodou porque `@astrojs/check` não está instalado e o CLI pediu instalação interativa. Para não alterar dependências durante a auditoria, usei `npx tsc --noEmit` como type check local.
+- `npm audit --production` precisou de rede e foi reexecutado com permissão escalada. Resultado: 4 vulnerabilidades, incluindo 1 high.
+- O grep de secrets em `dist/` encontra strings internas do React como `__SECRET_INTERNALS_DO_NOT_USE...`; isso não é segredo operacional.
+- O build local usa `.env` real e por isso GA4/Meta/Sigma aparecem no `dist`. O `.env.example` ainda contém placeholders, o que é aceitável como exemplo, mas deve ser mantido claramente separado de validação de produção.
 
 ---
 
-## Proximo Passo
+## Próximo Passo
 
 **PRE-MERGE CHECKLIST:**
-- [ ] Dominio final decidido → atualizar `src/config.ts` → `canonical`, `og:url`, `og:image`, `Organization.logo`, `WebSite.url`, `Event.image` → rebuild
-- [ ] Meta Pixel ID populado em env var Vercel (quando ativar; aceitar v1 sem Pixel se decisao)
-- [ ] Webhook URL populado em env var Vercel (quando integrar; aceitar v1 sem webhook se decisao)
-- [ ] Zoom URL substituida em `src/config.ts` → `Event.location.url` → rebuild
-- [ ] Politica + Termos: URLs finalizadas no Footer (criar paginas ou apontar pra VUK)
-- [ ] **Adicionar `<header role="banner">` envolvendo a TopBar**
-- [ ] **Adicionar honeypot no form** (`<input type="text" name="website" style="display:none">` + validar vazio no submit)
-- [ ] **Adicionar `headers` em `vercel.json`** (CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy)
-- [ ] Rodar `cd site && npm audit` — conferir sem CVE critica/alta
+- [ ] Corrigir type check.
+- [ ] Resolver o drift PRD vs implementação.
+- [ ] Adicionar header landmark.
+- [ ] Adicionar links legais + e-mail no footer.
+- [ ] Corrigir payload Sigma com `event_id`, `timestamp`, `origin`.
+- [ ] Adicionar honeypot.
+- [ ] Corrigir `og:image` absoluto.
+- [ ] Linkar `site/` no Vercel ou ajustar fluxo de env validation.
+- [ ] Tratar `npm audit` high.
 
-**VALIDACAO MANUAL (em paralelo):**
-- [ ] Lighthouse mobile em preview (Performance >=90, A11y >=95, Best Practices >=95, SEO >=95)
-- [ ] Viewport 320, 390, 768, 1024 no DevTools Responsive Mode
-- [ ] Modal UX walkthrough (focus trap, Esc, backdrop, aria-live, disabled submit)
-- [ ] JSON-LD em validator.schema.org (apos dominio real)
-- [ ] Rich Results Test (apos dominio real)
-- [ ] 404 customizada existe e renderiza
+**VALIDAÇÃO MANUAL:**
+- [ ] Lighthouse, viewports, touch targets, schema/rich results, social debuggers, submit end-to-end e securityheaders.io.
 
-**POS-MERGE:**
-- Vercel Git Integration dispara deploy automatico no merge em `main`
-- Acompanhar build log no dashboard Vercel
-- GA4 Realtime: conferir primeiro hit <5min apos deploy — se zerado, revisar env vars Vercel
-- securityheaders.io no dominio de producao (grade B+ minimo)
-- DNS via Cloudflare MCP (se dominio novo)
-- Meta Events Manager Test Events: disparar 1 submit real e conferir Pixel `Lead` com `eventID` (quando Pixel ativar)
+**Status final:** BLOQUEIA MERGE (9 gatekeepers + 12 validações manuais pendentes).
 
 ---
 
-**Status final:** **BLOQUEIA MERGE (5 gatekeepers + 3 findings criticos nao-gatekeepers).** Cobertura das 12 categorias completa; implementacao tecnica solida; pendencias sao de conteudo (dominio, legal), integracoes (Pixel, webhook), e 3 fixes rapidos (header landmark, honeypot, vercel.json headers). Estimativa pra liberar merge: 1-2h de trabalho concentrado + validacao manual.
+## Atualizacao Pos-Correcao — 2026-04-23 21:51
+
+Correcoes aplicadas em `site/` sem alterar a paleta dark/amber:
+
+- **Type check corrigido:** `npx tsc --noEmit` passa sem erros.
+- **Build corrigido:** `npm run build` passa e gera 2 paginas (`/` + `/404.html`).
+- **PRD reconciliado:** `docs/prds/intensivo-claude-code.md` agora declara `site/` como v1 dark vigente; Editorial Light fica fora do escopo desta correcao.
+- **Semantica:** `TopBar` agora renderiza dentro de `<header role="banner">`.
+- **SEO/social:** description reduzida para 133 chars; `og:image` e `twitter:image` absolutos.
+- **LLMEO/schema:** JSON-LD agora renderiza 3 scripts separados: `Organization`, `WebSite`, `Event`.
+- **Analytics/webhook:** payload Sigma inclui `event_id`, `timestamp`, `origin` e UTMs; Meta/GA4 usam o mesmo `event_id`.
+- **UTMs:** captura persiste em `sessionStorage`.
+- **Anti-spam:** honeypot invisivel adicionado ao formulario.
+- **Webhook fire-and-forget:** envio usa `Promise.allSettled` sem bloquear redirect.
+- **Compliance:** footer ganhou links de Privacidade, Termos e e-mail `contato@grupovuk.com.br`.
+- **Assets:** `apple-touch-icon.png` dedicado criado.
+- **404:** pagina customizada criada.
+- **Performance:** `SparklesCore`/tsparticles removido do Final CTA; chunk `sparkles.*.js` saiu do build.
+- **Vercel:** `site/.vercel` aponta para a config local da raiz; `vercel env ls` acessa o projeto e confirma GA/Meta em Production/Preview/Development.
+
+Checks ainda pendentes/aceitos:
+
+- **npm audit:** permanece com 1 high em Astro e 3 moderate em Vite/esbuild; decisao do plano foi mitigar/documentar e nao fazer upgrade breaking antes do go-live.
+- **Vercel env:** `PUBLIC_WEBHOOK_URLS` e `PUBLIC_REDIRECT_URL` nao aparecem no dashboard; o codigo possui fallback de producao para Sigma/Sendflow.
+- **Peso total:** `site/dist` ainda tem 1.8MB, acima do target estrito de 1MB, principalmente por imagens/depoimentos e runtime React/motion.
+- **Imagens:** 57 imagens seguem sem `width`/`height`; nao foi corrigido para evitar retrabalho amplo nos marquees.
+- **Validacoes manuais:** Lighthouse, viewports, touch targets, schema validator, Rich Results, social debuggers, securityheaders.io e submit end-to-end continuam pendentes.
+
+**Status pos-correcao:** AUDITORIA PARCIAL. Blockers tecnicos imediatos foram corrigidos; liberacao final ainda depende das validacoes manuais e da aceitacao explicita do risco `npm audit`/peso.

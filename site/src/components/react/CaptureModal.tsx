@@ -5,6 +5,7 @@ import { CONFIG } from '@/config';
 type SubmitStatus = 'idle' | 'loading' | 'success' | 'error';
 
 const UTM_PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'] as const;
+const UTM_STORAGE_KEY = 'icc_utms';
 
 function maskPhone(raw: string): string {
   const digits = raw.replace(/\D/g, '').slice(0, 11);
@@ -26,8 +27,11 @@ function buildUrlWithUTMs(baseUrl: string, utmParams: Record<string, string>): s
   }
 }
 
-function trackLead() {
-  const eventID = `lead_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+function createLeadEventId(): string {
+  return `lead_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function trackLead(eventID: string) {
   if (typeof window === 'undefined') return;
   try {
     window.fbq?.('track', 'Lead', {}, { eventID });
@@ -46,6 +50,7 @@ export default function CaptureModal() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [website, setWebsite] = useState('');
   const [status, setStatus] = useState<SubmitStatus>('idle');
   const [errors, setErrors] = useState<{ name?: string; email?: string; phone?: string }>({});
   const [utmParams, setUtmParams] = useState<Record<string, string>>({});
@@ -54,11 +59,19 @@ export default function CaptureModal() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const captured: Record<string, string> = {};
+    let stored: Record<string, string> = {};
+    try {
+      stored = JSON.parse(sessionStorage.getItem(UTM_STORAGE_KEY) || '{}');
+    } catch {
+      stored = {};
+    }
+
+    const captured: Record<string, string> = { ...stored };
     UTM_PARAMS.forEach((k) => {
       const v = params.get(k);
       if (v) captured[k] = v;
     });
+    sessionStorage.setItem(UTM_STORAGE_KEY, JSON.stringify(captured));
     setUtmParams(captured);
   }, []);
 
@@ -141,13 +154,21 @@ export default function CaptureModal() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (website.trim()) {
+      setStatus('success');
+      return;
+    }
     if (!validate()) return;
     setStatus('loading');
+    const eventID = createLeadEventId();
 
     const payload = {
       name: name.trim(),
       email: email.trim(),
       phone: phone.replace(/\D/g, ''),
+      event_id: eventID,
+      timestamp: new Date().toISOString(),
+      origin: window.location.origin,
       utm_source: utmParams.utm_source || '',
       utm_medium: utmParams.utm_medium || '',
       utm_campaign: utmParams.utm_campaign || '',
@@ -155,15 +176,15 @@ export default function CaptureModal() {
       utm_term: utmParams.utm_term || '',
     };
 
-    CONFIG.WEBHOOK_URLS.forEach((url) => {
+    void Promise.allSettled(CONFIG.WEBHOOK_URLS.map((url: string) =>
       fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-      }).catch(() => {});
-    });
+      }),
+    ));
 
-    trackLead();
+    trackLead(eventID);
 
     if (CONFIG.REDIRECT_URL) {
       window.location.href = buildUrlWithUTMs(CONFIG.REDIRECT_URL, utmParams);
@@ -179,7 +200,7 @@ export default function CaptureModal() {
       role="dialog"
       aria-modal="true"
       aria-labelledby="capture-modal-title"
-      className="fixed inset-0 z-[60] flex items-end justify-center px-3 py-6 sm:items-center sm:p-6"
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6"
     >
       <div
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
@@ -188,7 +209,7 @@ export default function CaptureModal() {
       />
       <div
         ref={cardRef}
-        className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-elevated shadow-[0_40px_120px_-30px_rgba(0,0,0,0.7)]"
+        className="relative max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-3xl border border-white/10 bg-elevated shadow-[0_40px_120px_-30px_rgba(0,0,0,0.7)]"
       >
         <button
           type="button"
@@ -218,6 +239,17 @@ export default function CaptureModal() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
+              <input
+                type="text"
+                name="website"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                autoComplete="off"
+                tabIndex={-1}
+                aria-hidden="true"
+                className="hidden"
+              />
+
               <div>
                 <input
                   ref={firstInputRef}

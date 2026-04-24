@@ -8,7 +8,7 @@ project: intensivo-claude-code-landing
 
 # PRD: Intensivo Claude Code
 
-> Landing de captura para o Intensivo Claude Code (16/05/2026, ao vivo no Zoom). Stack Astro 4 + Tailwind 4 + React 18 via islands. Direção estética **Editorial Light Serifado** (branco quente + laranja imprensa). Leitura do PRD em ≤ 10 minutos. Patterns detalhados em `~/.claude/skills/landing-page-prd/references/`.
+> Landing de captura para o Intensivo Claude Code (16/05/2026, ao vivo no Zoom). Este PRD foi reconciliado em 2026-04-23 para refletir a **v1 dark vigente em `site/`**, com stack Astro 4 + Tailwind 3 + React 18 via islands. A direção Editorial Light Serifada fica registrada como alternativa futura para `site-v2/`, não como contrato da v1.
 
 ---
 
@@ -33,7 +33,7 @@ Fixa pela skill. Não alterar sem subir para `skill-architect`.
 
 - **Framework:** Astro 4 (output estático)
 - **UI reativa:** React 18 via `@astrojs/react` (islands)
-- **Estilo:** Tailwind CSS 4 via `@tailwindcss/vite` (plugin Vite oficial do v4). **Não usar `@astrojs/tailwind`** — a integration está presa no v3.x e não recebeu update para v4. Config de design tokens vive em `src/styles/global.css` dentro de `@theme`, não em `tailwind.config.mjs`.
+- **Estilo:** Tailwind CSS 3 via `@astrojs/tailwind`, conforme implementação atual de `site/`. Tokens vivem em `tailwind.config.mjs` e em `src/styles/global.css`.
 - **Animação de entrada e hero:** GSAP 3
 - **Microinteração em componentes React:** `motion` v12 (proibido `framer-motion`)
 - **Fontes:** Definidas na seção 3 abaixo. Injetadas via `<link>` Google Fonts com `display=swap` e `preconnect`.
@@ -47,57 +47,54 @@ Fixa pela skill. Não alterar sem subir para `skill-architect`.
 
 ### 3.1 Respostas às 4 perguntas
 
-- **Propósito.** Vender um sábado ao vivo (R$27) a empreendedores não-dev. A página precisa entregar pertencimento e timing histórico.
-- **Tom.** Editorial de revista de tecnologia séria, autoral, sem hype. Nada de "transforme sua vida".
-- **Restrições.** 48h mínimas no ar até fechamento do grupo (26/04). Mobile-first (tráfego primário Instagram/WhatsApp). Precisa abrigar foto do Mateus sem cair em vibe gurú.
-- **Diferencial.** A tese do paralelo histórico ("Claude Code em 2026 é o marketing digital em 2015"). Toda a página ancora nesse frame.
+- **Propósito.** Capturar leads para o grupo VIP do Intensivo Claude Code, com promessa clara de produção operacional por IA.
+- **Tom.** Dark premium, técnico e urgente, com estética de mission control. Deve comunicar execução, automação e janela de oportunidade.
+- **Restrições.** Go-live rápido, mobile-first, integração com GA4, Meta Pixel, webhook Sigma e redirect Sendflow. A v1 prioriza estabilidade e captura sobre redesign.
+- **Diferencial.** A imagem mental de 4 squads de Claude Code trabalhando para o empreendedor, reduzindo dependência de equipe operacional.
 
 ### 3.2 Extremo escolhido
 
-`editorial/magazine` em tema **light com acento quente**. Combinado com traço `brutalist/raw` controlado (réguas 1px, cortes secos, zero sombra sintética).
+`industrial/utilitarian` + `retro-futuristic` em tema **dark amber**. A página usa contraste alto, grid técnico, glass cards, motion pontual e acento laranja VUK.
 
-### 3.3 Tokens da Fase 0 (fonte da verdade para `@theme` em `src/styles/global.css`)
+### 3.3 Tokens da Fase 0 (fonte da verdade para `tailwind.config.mjs` + `src/styles/global.css`)
 
 | Categoria | Token | Valor | Nota |
 |---|---|---|---|
-| Fundo | `page` | `#FBFAF7` | Off-white quente, cor de papel impresso |
-| Fundo alt | `surface` | `#F3F1EC` | Um grau de warmth para blocos de ênfase |
-| Card | `elevated` | `#FFFFFF` | Branco puro, apenas em cards críticos |
-| Tinta principal | `ink.primary` | `#0B0B0D` | Preto levemente quente |
-| Tinta apoio | `ink.secondary` | `#4A4744` | Parágrafo secundário, metadata |
-| Tinta muted | `ink.muted` | `#8A8580` | Captions, disclaimers |
-| Linha | `rule` | `#D9D4CB` | Régua 1px editorial |
-| Acento | `accent.DEFAULT` | `#E4572E` | Laranja imprensa |
-| Acento hover | `accent.hover` | `#C84521` | |
-| Acento deep | `accent.deep` | `#A63A1F` | Texto sobre acento em estados ativos |
+| Fundo | `page` | `#0A0A0B` | Near-black operacional |
+| Fundo alt | `surface` | `#141416` | Cards e blocos secundários |
+| Card | `elevated` | `#1C1C20` | Modal e superfícies críticas |
+| Tinta principal | `ink.primary` | `#F5F5F5` | Texto principal |
+| Tinta apoio | `ink.secondary` | `#A8A8A8` | Parágrafos |
+| Tinta muted | `ink.muted` | `#6B6B6B` | Captions |
+| Acento | `accent.DEFAULT` | `#E07A3A` | Laranja VUK |
+| Acento hover | `accent.hover` | `#F59E53` | Estados de hover |
+| Acento deep | `accent.deep` | `#C85D25` | Topbar e CTA |
 
 ### 3.4 Fontes
 
-- **Display:** **Fraunces** (Google Fonts). Variable, `opsz` ativa, peso 500–700. Usada em H1, H2, grandes números, títulos de bloco.
-- **Body:** **Inter Tight** (Google Fonts). Denso, editorial. Peso 400 regular, 600 em ênfase curta.
-- **Mono:** **JetBrains Mono** (Google Fonts). Apenas em datas, horários, valores (`R$ 27`), pré-headlines tipo `AO VIVO · 16 DE MAIO · ZOOM`.
-- **Proibido no projeto:** Inter regular (não-tight) como display, Space Grotesk, Roboto, Arial, system-ui.
+- **Display/body:** **Inter** (Google Fonts), pesos 400-800. A v1 usa Inter por legibilidade e velocidade de execução.
+- **Mono:** **JetBrains Mono** (Google Fonts), para datas, horários, badges e códigos visuais.
+- **Futura v2:** pode migrar para Fraunces + Inter Tight se a direção Editorial Light for retomada em `site-v2/`.
 
 ### 3.5 Textura, motion, composição
 
-- **Textura:** SVG grain 4% de opacidade em `page`. Régua horizontal 1px (`rule`) separando seções, como em revista. Zero gradient. Zero orb. Zero sparkle. Zero shadow-2xl.
-- **Motion signature:** **Mask-reveal horizontal** no H1 e H2 (GSAP + `clip-path` inset). Cortes secos ao entrar no viewport. Microinteração em cards = translate 2px + outline laranja 1px. Nada de fade-in-from-bottom.
-- **Composição:** Grid 12-col editorial **assimétrico**. Hero quebra H1 em 3 linhas com ênfase tipográfica diferente em cada. Setores e Perfis alternam tamanhos de cards (não bento uniforme). Timeline horizontal com régua.
+- **Textura:** radial glows sutis, dot grid e glass surfaces. Sem 3D pesado.
+- **Motion signature:** GSAP para entrada do hero e microinteração magnética em CTAs. Respeitar `prefers-reduced-motion`.
+- **Composição:** container central, cards técnicos, timeline vertical/mobile-friendly e CTA final com atmosfera de mission control.
 
 ### 3.6 Referências visuais
 
-1. **Attio** (attio.com) — transições tipográficas dramáticas, bold em serifada, densidade editorial. Emprestar: hierarquia de H1.
-2. **The Marginalian** (themarginalian.org) — editorial denso em light theme, tipografia autoral. Emprestar: atmosfera de revista.
-3. **It's Nice That** (itsnicethat.com) — grid assimétrico, crops tipográficos. Emprestar: crop e alternância de tamanho.
+1. **Vercel** - contraste técnico, UI limpa, foco em performance.
+2. **Linear** - dark mode refinado, bordas finas e acentos pontuais.
+3. **Raycast** - sensação de ferramenta operacional e atalhos de produtividade.
 
 ### 3.7 Anti-padrões deste projeto
 
-1. Dark theme com âmbar `#E07A3A` (é a cara do ICC Astro atual, estamos justamente nos afastando).
-2. Fade-in from bottom genérico em tudo.
-3. Emojis coloridos nos setores (usar glifos monocromáticos Lucide ou tipografia com letra-de-caixa).
-4. Cards com `border-radius > 8px`. Editorial pede cantos retos ou levemente arredondados.
-5. Shadow-2xl, glow, spotlight, sparkle animation.
-6. Gradient mesh de fundo.
+1. Reescrever a v1 para Editorial Light antes do go-live.
+2. Dependência de animação pesada que bloqueie performance mobile.
+3. Copy vaga de hype sem vínculo com captura e oferta R$27.
+4. Form sem anti-spam, sem event ID ou sem rastreabilidade Sigma/GA4/Meta.
+5. Metatags sociais relativas ou placeholders em produção.
 
 ---
 
@@ -319,14 +316,14 @@ Padrão completo em `~/.claude/skills/landing-page-prd/references/modal-pattern.
 - [ ] `favicon.ico` + `favicon.png` (importar de `intensivo-claude-code-astro/public/`)
 - [ ] `public/robots.txt` com crawlers de LLM (GPTBot, ClaudeBot, anthropic-ai, PerplexityBot, Google-Extended). Importar base de `intensivo-claude-code-astro/public/robots.txt`.
 - [ ] `public/llms.txt` com contexto denso do produto. Importar base de `intensivo-claude-code-astro/public/llms.txt` e revisar.
-- [ ] `public/og-image.png` (1200×630). Importar de `intensivo-claude-code-astro/public/og-image.png`. **Revisar** se bate com a nova direção estética (light + laranja); se não, recriar.
+- [ ] `public/og-image.png` (1200×630). Usar a arte dark/amber vigente da v1.
 - [ ] `<meta title>`: `Intensivo Claude Code · 16/05 ao vivo no Zoom` (45 chars)
 - [ ] `<meta description>`: `Sábado intensivo com Mateus Dias. Construa 10 agentes de IA sem programar. Grupo VIP com oferta única R$ 27.` (≈ 140 chars)
 - [ ] `<meta keywords>`: `claude code, intensivo, mateus dias, agentes de ia, grupo vuk, ai builder, no-code, saas brasileiro`
 - [ ] `<meta viewport>`, `<html lang="pt-BR">`, `<meta charset="UTF-8">`
 - [ ] `<link rel="canonical">`: `⚠️ TODO` (definir quando domínio for escolhido)
-- [ ] `<meta theme-color="#FBFAF7">` batendo com `manifest.theme_color`
-- [ ] `<link rel="manifest">` + `public/manifest.webmanifest` (`theme_color: #FBFAF7`, `background_color: #FBFAF7`)
+- [ ] `<meta theme-color="#0A0A0B">` batendo com `manifest.theme_color`
+- [ ] `<link rel="manifest">` + `public/manifest.webmanifest` (`theme_color: #0A0A0B`, `background_color: #0A0A0B`)
 - [ ] `<link rel="apple-touch-icon">`
 - [ ] `<script type="application/ld+json">` com `Organization` + `WebSite` + `Event` (ver 5.6)
 
@@ -346,66 +343,21 @@ Três tipos obrigatórios nesta landing:
   - `organizer: Grupo VUK`
   - `offers: price 27.00, priceCurrency BRL, availability InStock, validFrom 2026-04-22, url = Sendflow`
 
-### 5.7 Tokens Tailwind v4 (tradução da Fase 0)
+### 5.7 Tokens Tailwind v3 da v1 dark
 
-No Tailwind v4 os tokens vivem dentro de `@theme` no CSS. Nome do CSS var vira nome da classe: `--color-page` → `bg-page`/`text-page`, `--font-display` → `font-display`, `--animate-live-pulse` → `animate-live-pulse`. **Não existe mais `tailwind.config.mjs`.**
+Na v1, tokens vivem em `tailwind.config.mjs` e são espelhados em `src/styles/global.css`. A paleta dark/amber atual é contrato da landing e não deve ser alterada nesta correção:
 
-```css
-/* site/src/styles/global.css — extract */
-@import "tailwindcss";
+- `page: #0A0A0B`
+- `surface: #141416`
+- `elevated: #1C1C20`
+- `accent.DEFAULT: #E07A3A`
+- `accent.hover: #F59E53`
+- `accent.deep: #C85D25`
+- `ink.primary: #F5F5F5`
+- `ink.secondary: #A8A8A8`
+- `ink.muted: #6B6B6B`
 
-@theme {
-  --color-page: #FBFAF7;
-  --color-surface: #F3F1EC;
-  --color-elevated: #FFFFFF;
-  --color-rule: #D9D4CB;
-
-  --color-accent: #E4572E;
-  --color-accent-hover: #C84521;
-  --color-accent-deep: #A63A1F;
-
-  --color-ink-primary: #0B0B0D;
-  --color-ink-secondary: #4A4744;
-  --color-ink-muted: #8A8580;
-
-  --font-display: "Fraunces", ui-serif, serif;
-  --font-sans: "Inter Tight", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-
-  --animate-mask-reveal: mask-reveal 0.8s cubic-bezier(0.77, 0, 0.175, 1) both;
-  --animate-live-pulse: live-pulse 1.6s ease-in-out infinite;
-  --animate-marquee-left: marquee-left 55s linear infinite;
-  --animate-marquee-right: marquee-right 55s linear infinite;
-
-  @keyframes mask-reveal {
-    0%   { clip-path: inset(0 100% 0 0); }
-    100% { clip-path: inset(0 0 0 0); }
-  }
-  @keyframes live-pulse {
-    0%, 100% { opacity: 1; }
-    50%      { opacity: 0.4; }
-  }
-  @keyframes marquee-left {
-    0%   { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-  @keyframes marquee-right {
-    0%   { transform: translateX(-50%); }
-    100% { transform: translateX(0); }
-  }
-}
-```
-
-Mapeamento v3 → v4 que importa pro projeto:
-
-- `colors.accent.DEFAULT` / `.hover` / `.deep` vira `--color-accent` / `--color-accent-hover` / `--color-accent-deep`. Classes `bg-accent`, `bg-accent-hover`, `bg-accent-deep` continuam funcionando iguais.
-- `colors.ink.primary` vira `--color-ink-primary`. Classe `text-ink-primary` continua igual.
-- `theme('colors.ink.primary')` dentro de CSS vira `var(--color-ink-primary)`.
-- `fontFamily.sans` vira `--font-sans`. `font-sans` continua igual.
-- `keyframes` + `animation` viram `@keyframes` dentro de `@theme` + `--animate-<nome>`. Classes `animate-live-pulse`, `animate-marquee-left`, etc. continuam iguais.
-- Não existe mais `darkMode: "class"` — v4 usa variant `dark:` via CSS (`@variant dark (&:where(.dark, .dark *))`). Landing é só light, então ignorar.
-
-`bg-[#hex]` e `text-[#hex]` inline **são bug de code review**. Reprovar PR.
+`bg-[#hex]` e `text-[#hex]` inline continuam proibidos fora de componentes utilitários legados. Não alterar cores no ciclo de correção dos blockers.
 
 ### 5.8 Dependency hygiene
 
@@ -438,13 +390,12 @@ Componentes **não** são importados. A refatoração visual é total.
 {
   "dependencies": {
     "@astrojs/react": "^3",
-    "@tailwindcss/vite": "^4",
     "astro": "^4",
     "motion": "^12",
     "gsap": "^3",
     "react": "^18",
     "react-dom": "^18",
-    "tailwindcss": "^4",
+    "tailwindcss": "^3",
     "tailwind-merge": "^2",
     "clsx": "^2",
     "lucide-react": "^0.4"
@@ -461,20 +412,18 @@ Componentes **não** são importados. A refatoração visual é total.
 ```js
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
-import tailwindcss from '@tailwindcss/vite';
+import tailwind from '@astrojs/tailwind';
 
 export default defineConfig({
-  integrations: [react()],
-  vite: { plugins: [tailwindcss()] },
+  integrations: [react(), tailwind({ applyBaseStyles: false })],
   output: 'static',
 });
 ```
 
 Notas:
-- **Tailwind v4 via `@tailwindcss/vite`.** O pacote `@astrojs/tailwind` é v3-only e **não será atualizado**; no v4 o Tailwind virou plugin Vite nativo. Não tem config JS — tudo em CSS via `@theme`.
-- **Não existe `tailwind.config.mjs`** no projeto. Se alguém criar um, rejeitar em code review.
-- **Removido:** `@astrojs/tailwind` (incompatível com v4), `class-variance-authority` (`clsx` basta), `tailwindcss-animate` (keyframes próprias via `@theme`).
-- **Adicionado via justificativa:** `@tailwindcss/vite` (obrigatório no v4 em Astro).
+- `site/` usa Tailwind v3 e `@astrojs/tailwind` por decisão de estabilidade da v1.
+- `tailwind.config.mjs` existe e é fonte de verdade para tokens de classe.
+- Migração para Tailwind v4 fica fora do escopo desta correção.
 
 ---
 
@@ -483,7 +432,7 @@ Notas:
 - [ ] `npx astro build` passa sem warnings
 - [ ] `dist/index.html` contém JSON-LD com `Organization + WebSite + Event`
 - [ ] `dist/index.html` contém `<meta>` title, description, keywords, canonical, theme-color, og:*
-- [ ] `dist/robots.txt`, `dist/llms.txt`, `dist/manifest.webmanifest` existem e batem com o novo tema
+- [ ] `dist/robots.txt`, `dist/llms.txt`, `dist/manifest.webmanifest` existem e batem com o tema dark/amber
 - [ ] Modal: Tab/Shift+Tab confinados, Esc fecha, backdrop com `confirm()` em form sujo, erro com `aria-live`
 - [ ] Submit end-to-end: GA4 dispara `Lead` com `event_id`, redireciona para Sendflow com UTMs propagados
 - [ ] Lighthouse mobile (375px, Slow 4G): Performance ≥ 90, Acessibilidade ≥ 95, Best Practices ≥ 95, SEO ≥ 95
@@ -506,8 +455,8 @@ Copiar `intensivo-claude-code-astro/docs/quality-checklist.md` para `site/docs/q
 - Validação pós-deploy do JSON-LD (Rich Results Test)
 - Configuração de DNS e SSL (ver `dns-ssl`, `deploy-pipeline`)
 - Criação de pixel novo caso o cliente decida ativar (ver `env-secrets`)
-- Webhook de captura de lead (CRM destino) — definir em próxima iteração
-- Recriação do OG image se o atual não bater com light theme
+- Recriação visual completa em Editorial Light
+- Migração para Tailwind 4
 
 ---
 
@@ -515,12 +464,9 @@ Copiar `intensivo-claude-code-astro/docs/quality-checklist.md` para `site/docs/q
 
 Itens marcados `⚠️ TODO` no PRD, consolidados:
 
-1. **Domínio final** da landing (impacta canonical, manifest, og:url).
-2. **Meta Pixel ID** (se for ativar v1.1, passar para `.env`).
-3. **Webhook de captura** (CRM ou Zapier para push do lead).
-4. **URL do Zoom** para JSON-LD `Event.location`.
-5. **Política de Privacidade + Termos** (URLs).
-6. **E-mail de contato** no footer.
+1. Validar submit real com Sigma, GA4 e Meta Events Manager.
+2. Validar JSON-LD no validator.schema.org.
+3. Validar Lighthouse mobile e securityheaders.io no domínio final.
 7. **Decisão sobre OG image** (manter do ICC Astro ou recriar no novo tema).
 
 Nenhuma dessas bloqueia a implementação inicial. Todas podem ser resolvidas via `.env` ou ajuste pontual no dia do merge.

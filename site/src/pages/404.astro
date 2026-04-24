@@ -1,0 +1,25 @@
+---
+import Base from '@/layouts/Base.astro';
+
+const title = 'Pagina nao encontrada | Intensivo Claude Code';
+const description = 'A pagina que voce tentou acessar nao existe.';
+---
+
+<Base title={title} description={description}>
+  <main id="main" class="min-h-screen">
+    <section class="container-landing flex min-h-screen flex-col items-center justify-center py-24 text-center">
+      <p class="font-mono text-xs font-semibold uppercase tracking-[0.22em] text-accent-hover">
+        404
+      </p>
+      <h1 class="mt-4 text-4xl font-bold tracking-tight text-ink-primary md:text-6xl">
+        Pagina nao encontrada.
+      </h1>
+      <p class="mt-5 max-w-xl text-base leading-relaxed text-ink-secondary md:text-lg">
+        Esse caminho nao existe ou saiu do ar. Volte para a landing principal do Intensivo Claude Code.
+      </p>
+      <a href="/" class="cta-button mt-8">
+        Voltar para a landing
+      </a>
+    </section>
+  </main>
+</Base>

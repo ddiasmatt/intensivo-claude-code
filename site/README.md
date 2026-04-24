@@ -96,7 +96,7 @@ O `<html>` sempre tem classe `dark`. Os tokens em `src/styles/global.css` + `tai
 4. Dispara `fbq('track','Lead')` + `gtag('event','generate_lead')` com `eventID` para dedup.
 5. `window.location.href = CONFIG.REDIRECT_URL` com UTMs propagados.
 
-IDs e webhooks vivem em `.env` (ver `.env.example`):
+IDs e webhooks vivem em `.env` (ver `.env.example`). No `/site`, webhook e redirect tambem tem fallback de producao para evitar build publicado com submit quebrado:
 
 ```
 PUBLIC_GA_ID=G-XXXXXXXXXX
