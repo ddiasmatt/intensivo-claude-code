@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apresentação: Melancia</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #0a0a0a;
+    color: #fff;
+    overflow: hidden;
+  }
+
+  .deck {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 6vh 8vw;
+    opacity: 0;
+    transform: translateX(40px);
+    transition: opacity 400ms ease, transform 400ms ease;
+    pointer-events: none;
+    text-align: center;
+  }
+
+  .slide.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  .slide-1 {
+    background: linear-gradient(135deg, #0d4f1c 0%, #1a7a30 50%, #d62828 100%);
+  }
+  .slide-2 { background: linear-gradient(160deg, #1a1a1a 0%, #2d5016 100%); }
+  .slide-3 { background: linear-gradient(160deg, #1a1a1a 0%, #6b1a1a 100%); }
+  .slide-4 { background: linear-gradient(160deg, #1a1a1a 0%, #2d5016 100%); }
+  .slide-5 { background: linear-gradient(160deg, #1a1a1a 0%, #6b1a1a 100%); }
+  .slide-6 { background: linear-gradient(160deg, #1a1a1a 0%, #2d5016 100%); }
+  .slide-7 {
+    background: linear-gradient(135deg, #d62828 0%, #1a7a30 100%);
+  }
+
+  h1 {
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+    line-height: 1.05;
+  }
+
+  h2 {
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 700;
+    margin-bottom: 2rem;
+    letter-spacing: -0.01em;
+  }
+
+  p, li {
+    font-size: clamp(1rem, 1.6vw, 1.4rem);
+    line-height: 1.6;
+    max-width: 900px;
+  }
+
+  ul {
+    list-style: none;
+    text-align: left;
+    max-width: 800px;
+  }
+
+  li {
+    padding: 0.6rem 0 0.6rem 2rem;
+    position: relative;
+  }
+
+  li::before {
+    content: "🍉";
+    position: absolute;
+    left: 0;
+    top: 0.5rem;
+  }
+
+  .emoji-hero {
+    font-size: clamp(5rem, 12vw, 9rem);
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 10px 30px rgba(0,0,0,0.4));
+  }
+
+  .subtitle {
+    opacity: 0.85;
+    font-weight: 400;
+    margin-top: 0.5rem;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+    max-width: 1000px;
+    width: 100%;
+  }
+
+  .stat {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 16px;
+    padding: 1.5rem;
+  }
+
+  .stat-num {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800;
+    color: #ff6b6b;
+    display: block;
+  }
+
+  .stat-label {
+    font-size: 0.95rem;
+    opacity: 0.85;
+    margin-top: 0.4rem;
+  }
+
+  .nav {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(10px);
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    z-index: 10;
+  }
+
+  .nav button {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 200ms;
+  }
+
+  .nav button:hover { background: rgba(255,255,255,0.15); }
+  .nav button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .counter {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    padding: 0 0.8rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hint {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    font-size: 0.75rem;
+    opacity: 0.5;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+<div class="deck">
+
+  <section class="slide slide-1 active">
+    <div class="emoji-hero">🍉</div>
+    <h1>Melancia</h1>
+    <p class="subtitle">A fruta do verão. Doce, refrescante e cheia de surpresas.</p>
+  </section>
+
+  <section class="slide slide-2">
+    <h2>O que é?</h2>
+    <p>A melancia (<em>Citrullus lanatus</em>) é uma fruta originária da África, cultivada há mais de 5.000 anos. Pertence à família das cucurbitáceas, mesma do pepino, da abóbora e do melão.</p>
+    <p style="margin-top:1.5rem;">Composta por cerca de <strong>92% de água</strong>, é uma das frutas mais hidratantes que existem.</p>
+  </section>
+
+  <section class="slide slide-3">
+    <h2>Valor nutricional</h2>
+    <div class="stats">
+      <div class="stat">
+        <span class="stat-num">30 kcal</span>
+        <div class="stat-label">por 100g — uma das frutas menos calóricas</div>
+      </div>
+      <div class="stat">
+        <span class="stat-num">92%</span>
+        <div class="stat-label">de água — hidratação pura</div>
+      </div>
+      <div class="stat">
+        <span class="stat-num">Licopeno</span>
+        <div class="stat-label">antioxidante associado à saúde cardiovascular</div>
+      </div>
+      <div class="stat">
+        <span class="stat-num">Vitaminas</span>
+        <div class="stat-label">A, B6 e C, além de potássio e magnésio</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide slide-4">
+    <h2>Benefícios</h2>
+    <ul>
+      <li>Hidrata o corpo, ideal para dias quentes ou pós-treino</li>
+      <li>Rica em licopeno, antioxidante que protege as células</li>
+      <li>Auxilia a digestão e o funcionamento intestinal</li>
+      <li>Contribui para a saúde da pele e da visão</li>
+      <li>Baixa em calorias — aliada de dietas equilibradas</li>
+      <li>L-citrulina ajuda na recuperação muscular</li>
+    </ul>
+  </section>
+
+  <section class="slide slide-5">
+    <h2>Curiosidades</h2>
+    <ul>
+      <li>Existem mais de 1.200 variedades de melancia no mundo</li>
+      <li>No Japão, melancias quadradas chegam a custar centenas de dólares</li>
+      <li>A casca e as sementes são comestíveis e nutritivas</li>
+      <li>A China é o maior produtor mundial, com mais de 60% da produção</li>
+      <li>O Brasil está entre os 10 maiores produtores globais</li>
+      <li>Já existiu melancia amarela, laranja e até branca por dentro</li>
+    </ul>
+  </section>
+
+  <section class="slide slide-6">
+    <h2>Como escolher uma boa?</h2>
+    <ul>
+      <li>Bata de leve: som oco indica fruta madura</li>
+      <li>Procure uma mancha amarelada na casca — sinal de que amadureceu no chão</li>
+      <li>Peso: deve estar pesada para o tamanho (mais água, mais doce)</li>
+      <li>Casca firme, sem cortes ou partes moles</li>
+      <li>Cabinho seco indica que foi colhida no ponto certo</li>
+    </ul>
+  </section>
+
+  <section class="slide slide-7">
+    <div class="emoji-hero">🍉✨</div>
+    <h1>Obrigado!</h1>
+    <p class="subtitle">Agora é só cortar uma fatia gelada e aproveitar.</p>
+  </section>
+
+</div>
+
+<div class="nav">
+  <button id="prev" aria-label="Slide anterior">←</button>
+  <span class="counter"><span id="cur">1</span> / <span id="total">7</span></span>
+  <button id="next" aria-label="Próximo slide">→</button>
+</div>
+
+<div class="hint">← → ou espaço para navegar</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  const cur = document.getElementById('cur');
+  const totalEl = document.getElementById('total');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+  let i = 0;
+
+  totalEl.textContent = total;
+
+  function go(n) {
+    i = Math.max(0, Math.min(total - 1, n));
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    cur.textContent = i + 1;
+    prevBtn.disabled = i === 0;
+    nextBtn.disabled = i === total - 1;
+  }
+
+  prevBtn.addEventListener('click', () => go(i - 1));
+  nextBtn.addEventListener('click', () => go(i + 1));
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); go(i + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(i - 1); }
+    else if (e.key === 'Home') go(0);
+    else if (e.key === 'End') go(total - 1);
+  });
+
+  go(0);
+</script>
+</body>
+</html>
